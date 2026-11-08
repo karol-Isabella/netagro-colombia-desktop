@@ -4,6 +4,7 @@ import { useTranslation } from '@renderer/i18n/useTranslation'
 import { type MessageKey } from '@renderer/i18n/messages'
 import { PreferencesPanel } from './PreferencesPanel'
 import { TerritoryPanel } from './TerritoryPanel'
+import { useAuthStore } from '@renderer/services/authStore'
 
 const navigation = [
   { to: '/', label: 'overview', icon: LayoutDashboard },
@@ -15,6 +16,7 @@ const navigation = [
 
 export function AppShell() {
   const t = useTranslation()
+  const { username, logout } = useAuthStore()
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">{t('skipContent')}</a>
@@ -32,6 +34,7 @@ export function AppShell() {
           ))}
         </nav>
         <div className="workspace-note"><HardDrive size={17} aria-hidden="true" /><span>{t('localWorkspace')}</span></div>
+        {username && <div className="account-note"><span>{username}</span><button onClick={() => void logout()}>{t('logout')}</button></div>}
       </aside>
       <main id="main-content" tabIndex={-1} className="min-w-0"><Outlet /></main>
       <aside className="inspector">

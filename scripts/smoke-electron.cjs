@@ -61,6 +61,16 @@ async function verify(window) {
   assert.equal(security.sandbox, true)
   assert.equal(security.contextIsolation, true)
   assert.equal(security.nodeIntegration, false)
+  await settle(web, "document.querySelector('.auth-form') !== null")
+  const denied = await evaluate(web, 'return window.netAgro.getCoverage();')
+  assert.deepEqual(denied, { ok: false, error: 'AUTH_REQUIRED' })
+  await evaluate(web, `
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    for (const [id,value] of [['username','smoke-user'],['password','only-a-test-password']]) {
+      const input = document.getElementById(id); setter.call(input,value); input.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+  `)
+  await evaluate(web, "document.querySelector('.auth-form').requestSubmit();")
   await settle(web, "document.querySelector('h1')?.textContent === 'Panorama'")
   const metadata = await evaluate(web, `
     if (typeof window.require !== 'undefined' || typeof window.ipcRenderer !== 'undefined') throw new Error('Privileged API leak');
@@ -73,6 +83,8 @@ async function verify(window) {
   const policy = await evaluate(web, `return document.querySelector('meta[http-equiv="Content-Security-Policy"]').content;`)
   assert.ok(policy.includes("connect-src 'none'"))
   await settle(web, "document.querySelector('.coverage-map')?.dataset.rendered === 'true'")
+  await evaluate(web, "document.querySelector('.analysis-panel .action-button').click();")
+  await settle(web, "document.querySelector('.analysis-result')?.textContent.includes('Reglas locales')")
   await capture(web, 'overview-light.png')
 
   await evaluate(web, `

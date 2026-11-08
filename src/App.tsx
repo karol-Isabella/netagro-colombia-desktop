@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@renderer/components/AppShell'
+import { AuthGate } from '@renderer/components/AuthGate'
 import { WorkspacePage } from '@renderer/pages/WorkspacePage'
 import { CoveragePage } from '@renderer/pages/CoveragePage'
 import { SettingsPage } from '@renderer/pages/SettingsPage'
@@ -19,6 +20,7 @@ function App() {
 
   return (
     <HashRouter>
+      <AuthGate>
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<CoveragePage title="overview" />} />
@@ -30,6 +32,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
+      </AuthGate>
     </HashRouter>
   )
 }

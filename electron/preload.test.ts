@@ -8,7 +8,7 @@ it('exposes only the named capability and validates responses', async () => {
   await import('./preload')
   const [name, api] = bridge.expose.mock.calls[0] as [string, DesktopApi]
   expect(name).toBe('netAgro')
-  expect(Object.keys(api)).toEqual(['getAppInfo', 'getCoverage', 'getMaps', 'analyze'])
+  expect(Object.keys(api)).toEqual(['getAppInfo', 'getCoverage', 'getMaps', 'authStatus', 'register', 'login', 'logout', 'analyze'])
   bridge.invoke.mockResolvedValue({ name: 'NetAgro Colombia', version: '0.0.0', platform: 'win32' })
   await expect(api.getAppInfo()).resolves.toHaveProperty('name', 'NetAgro Colombia')
   expect(bridge.invoke).toHaveBeenCalledWith('app:get-info', undefined)

@@ -5,6 +5,7 @@ import { registerAppIpc } from '@main/ipc'
 import { registerDataIpc, createRouteRegistrar } from '@main/dataIpc'
 import { contracts } from '@shared/contracts'
 import { AnalysisService } from '@main/services/analysis'
+import { AuthService } from '@main/services/auth'
 import { CoverageRepository } from '@main/services/repository'
 import { contentSecurityPolicy, isTrustedDocument } from '@main/security'
 
@@ -67,10 +68,20 @@ void app.whenReady().then(() => {
   const repository = new CoverageRepository(
     app.isPackaged ? path.join(process.resourcesPath, 'data') : path.join(directory, '../data/processed'),
   )
-  registerDataIpc(() => window, trustedDocument, repository)
-  const route = createRouteRegistrar(() => window, trustedDocument)
+  const auth = new AuthService(app.getPath('userData'))
+  registerDataIpc(() => window, trustedDocument, repository, () => auth.requireSession())
+  const route = createRouteRegistrar(() => window, trustedDocument, () => auth.requireSession())
+  route('auth:status', contracts['auth:status'], () => auth.status(), false)
+  route('auth:register', contracts['auth:register'], input => auth.register(input), false)
+  route('auth:login', contracts['auth:login'], input => auth.login(input), false)
+  route('auth:logout', contracts['auth:logout'], () => { auth.logout(); return null }, false)
   const analysis = new AnalysisService(repository, () => process.env.MAIN_VITE_GEMINI_API_KEY)
-  route('analysis:run', contracts['analysis:run'], input => analysis.analyze(input))
+  let analyzing = false
+  route('analysis:run', contracts['analysis:run'], async input => {
+    if (analyzing) throw new Error('RATE_LIMIT')
+    analyzing = true
+    try { return await analysis.analyze(input) } finally { analyzing = false }
+  })
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

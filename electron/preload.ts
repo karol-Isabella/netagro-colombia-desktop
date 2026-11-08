@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { contracts, type DesktopApi } from '@shared/contracts'
+import { contracts, type DesktopApi, type credentialsSchema } from '@shared/contracts'
 import type { z } from 'zod'
 
 type Channel = keyof typeof contracts
@@ -17,6 +17,10 @@ const api: DesktopApi = Object.freeze({
   },
   getCoverage: () => invoke('data:load', undefined),
   getMaps: () => invoke('data:maps', undefined),
+  authStatus: () => invoke('auth:status', undefined),
+  register: (input: z.infer<typeof credentialsSchema>) => invoke('auth:register', input),
+  login: (input: z.infer<typeof credentialsSchema>) => invoke('auth:login', input),
+  logout: () => invoke('auth:logout', undefined),
   analyze: (input: z.infer<typeof contracts['analysis:run']['request']>) => invoke('analysis:run', input),
 })
 

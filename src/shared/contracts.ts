@@ -20,6 +20,11 @@ export const preferencesSchema = z.object({
 export type Theme = z.infer<typeof themeSchema>
 export type Locale = z.infer<typeof localeSchema>
 export type Preferences = z.infer<typeof preferencesSchema>
+export const credentialsSchema = z.object({
+  username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,40}$/),
+  password: z.string().min(10).max(128),
+}).strict()
+const sessionSchema = z.object({ username: z.string().nullable(), hasAccounts: z.boolean() }).strict()
 
 export const appInfoSchema = z.object({
   name: z.literal('NetAgro Colombia'),
@@ -34,6 +39,10 @@ export const contracts = {
   },
   'data:load': { request: z.undefined(), response: resultSchema(datasetSchema) },
   'data:maps': { request: z.undefined(), response: resultSchema(mapsSchema) },
+  'auth:status': { request: z.undefined(), response: resultSchema(sessionSchema) },
+  'auth:register': { request: credentialsSchema, response: resultSchema(sessionSchema) },
+  'auth:login': { request: credentialsSchema, response: resultSchema(sessionSchema) },
+  'auth:logout': { request: z.undefined(), response: resultSchema(z.null()) },
   'analysis:run': { request: z.object({ territoryId: z.string().regex(/^(CO|\d{2}|\d{5})$/), layer: z.enum(['2G','3G','4G','5G','none']), locale: localeSchema, online: z.boolean() }).strict(), response: resultSchema(analysisSchema) },
 } as const
 
@@ -44,5 +53,9 @@ export interface DesktopApi {
   getAppInfo: () => Promise<AppInfo>
   getCoverage: () => Promise<z.infer<typeof contracts['data:load']['response']>>
   getMaps: () => Promise<z.infer<typeof contracts['data:maps']['response']>>
+  authStatus: () => Promise<z.infer<typeof contracts['auth:status']['response']>>
+  register: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:register']['response']>>
+  login: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:login']['response']>>
+  logout: () => Promise<z.infer<typeof contracts['auth:logout']['response']>>
   analyze: (input: z.infer<typeof contracts['analysis:run']['request']>) => Promise<z.infer<typeof contracts['analysis:run']['response']>>
 }
