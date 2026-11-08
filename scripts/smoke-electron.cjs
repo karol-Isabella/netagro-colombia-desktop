@@ -42,7 +42,17 @@ async function settle(web, predicate) {
 async function capture(web, filename) {
   // DOM state changes before Chromium submits a new frame, especially while hidden.
   await evaluate(web, 'await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));')
-  writeFileSync(path.join(output, filename), (await web.capturePage()).toPNG())
+  const expected = await evaluate(web, "return getComputedStyle(document.querySelector('.sidebar')).backgroundColor.match(/\\d+/g).slice(0, 3).map(Number);")
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const image = await web.capturePage()
+    const pixel = image.toBitmap()
+    if (pixel[2] === expected[0] && pixel[1] === expected[1] && pixel[0] === expected[2]) {
+      writeFileSync(path.join(output, filename), image.toPNG())
+      return
+    }
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
+  throw new Error(`Captured theme does not match the rendered CSS: ${filename}`)
 }
 
 async function verify(window) {
