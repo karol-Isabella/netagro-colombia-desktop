@@ -14,6 +14,7 @@ app.on('browser-window-created', (_event, window) => {
   // Run the actual Main window without interrupting the user's desktop.
   window.show = () => {}
   const web = window.webContents
+  web.setBackgroundThrottling(false)
   web.on('preload-error', (_event, _file, error) => errors.push(String(error)))
   web.on('console-message', (_event, level, message) => {
     if (level >= 3) errors.push(message)
@@ -38,6 +39,12 @@ async function settle(web, predicate) {
   `)
 }
 
+async function capture(web, filename) {
+  // DOM state changes before Chromium submits a new frame, especially while hidden.
+  await evaluate(web, 'await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));')
+  writeFileSync(path.join(output, filename), (await web.capturePage()).toPNG())
+}
+
 async function verify(window) {
   const web = window.webContents
   const security = web.getLastWebPreferences()
@@ -55,7 +62,7 @@ async function verify(window) {
   assert.equal(metadata.version, require('../package.json').version)
   const policy = await evaluate(web, `return document.querySelector('meta[http-equiv="Content-Security-Policy"]').content;`)
   assert.ok(policy.includes("connect-src 'none'"))
-  writeFileSync(path.join(output, 'overview-light.png'), (await web.capturePage()).toPNG())
+  await capture(web, 'overview-light.png')
 
   await evaluate(web, `
     document.querySelector('input[value="dark"]').click();
@@ -64,7 +71,7 @@ async function verify(window) {
     language.dispatchEvent(new Event('change', { bubbles: true }));
   `)
   await settle(web, "document.documentElement.lang === 'en' && document.documentElement.classList.contains('dark')")
-  writeFileSync(path.join(output, 'overview-dark-en.png'), (await web.capturePage()).toPNG())
+  await capture(web, 'overview-dark-en.png')
   await evaluate(web, `document.querySelector('a[href="#/settings"]').click();`)
   await settle(web, "document.querySelector('.about-card')?.textContent.includes('Version')")
   const ready = new Promise(resolve => web.once('did-finish-load', resolve))
@@ -75,7 +82,7 @@ async function verify(window) {
   window.setSize(820, 650)
   await settle(web, 'window.innerWidth <= 820')
   assert.equal(await evaluate(web, `return document.documentElement.scrollWidth <= window.innerWidth;`), true)
-  writeFileSync(path.join(output, 'settings-compact.png'), (await web.capturePage()).toPNG())
+  await capture(web, 'settings-compact.png')
   assert.deepEqual(errors, [])
   const result = { passed: true, metadata, security: { sandbox: security.sandbox, contextIsolation: security.contextIsolation, nodeIntegration: security.nodeIntegration }, checks: ['production boot', 'real IPC', 'no raw Electron API', 'production CSP', 'theme and locale', 'persistence after reload', 'compact layout', 'no renderer or preload errors'] }
   writeFileSync(path.join(output, 'electron-smoke.json'), JSON.stringify(result, null, 2))
