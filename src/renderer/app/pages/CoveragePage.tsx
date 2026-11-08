@@ -1,37 +1,183 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { Compass, ChevronRight, Layers, SlidersHorizontal } from 'lucide-react'
 import { technologies, type Layer } from '@shared/coverage'
 import { useCoverageStore, type LegendBand } from '@renderer/services/coverageStore'
 import { searchTerritories, territoryView } from '@renderer/services/selectors'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { WorkspacePage } from './WorkspacePage'
-const CoverageMap = lazy(() => import('@renderer/components/CoverageMap').then(module => ({ default: module.CoverageMap })))
+
+const CoverageMap = lazy(() =>
+  import('@renderer/components/CoverageMap').then((module) => ({ default: module.CoverageMap }))
+)
+
 export function CoveragePage({ title = 'map' }: { title?: 'map' | 'coverage' | 'overview' }) {
-  const state = useCoverageStore(), t = useTranslation()
+  const state = useCoverageStore()
+  const t = useTranslation()
   const { load } = state
   const [query, setQuery] = useState('')
-  useEffect(() => { void load() }, [load])
+
+  useEffect(() => {
+    void load()
+  }, [load])
+
   if (state.status === 'preview') return <WorkspacePage section={title} />
-  if (!state.data || !state.maps) return <div className="page"><h1>{t(title)}</h1><p role="status">{t(state.status === 'error' ? 'dataError' : 'loadingData')}</p>
-    {state.status === 'error' && <button className="action-button" onClick={() => void state.load()}>{t('retry')}</button>}</div>
-  const { territory, crumbs, children } = territoryView(state.data,state.selectedId)
-  const results = searchTerritories(state.data,query)
-  return <div className="page data-page">
-    <header className="page-header"><p className="eyebrow">{state.data.metadata.period} · CRC / DANE</p><h1>{t(title)}</h1></header>
-    <nav className="breadcrumbs" aria-label={t('breadcrumb')}>{crumbs.map(c => <button key={c.id} onClick={() => state.select(c.id)} aria-current={c.id === territory.id ? 'location' : undefined}>{c.name}</button>)}</nav>
-    <div className="map-toolbar">
-      <label className="search-label">{t('search')}<input placeholder={t('searchHint')} value={query} onChange={e => setQuery(e.target.value)} /></label>
-      <button className="action-button" onClick={() => state.select('52')}>{t('focusNarino')}</button>
+
+  if (!state.data || !state.maps) {
+    return (
+      <div className="page">
+        <h1>{t(title)}</h1>
+        <p role="status" className="text-sm text-[var(--muted)] my-4">
+          {t(state.status === 'error' ? 'dataError' : 'loadingData')}
+        </p>
+        {state.status === 'error' && (
+          <button className="action-button" onClick={() => void state.load()}>
+            {t('retry')}
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  const { territory, crumbs, children } = territoryView(state.data, state.selectedId)
+  const results = searchTerritories(state.data, query)
+
+  return (
+    <div className="page data-page">
+      <header className="page-header">
+        <span className="eyebrow">{state.data.metadata.period} · CRC / DANE</span>
+        <h1>{t(title)}</h1>
+      </header>
+
+      {/* Modern Breadcrumb Trail */}
+      <nav className="breadcrumbs" aria-label={t('breadcrumb')}>
+        {crumbs.map((c, i) => (
+          <div key={c.id} className="flex items-center gap-1.5">
+            {i > 0 && <ChevronRight size={14} className="text-[var(--muted)] shrink-0" />}
+            <button
+              onClick={() => state.select(c.id)}
+              aria-current={c.id === territory.id ? 'location' : undefined}
+            >
+              {c.name}
+            </button>
+          </div>
+        ))}
+      </nav>
+
+      {/* Map Toolbar & Search */}
+      <div className="map-toolbar">
+        <label className="search-label">
+          <span>{t('search')}</span>
+          <div className="relative">
+            <input
+              placeholder={t('searchHint')}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+        </label>
+        <button className="action-button" onClick={() => state.select('52')}>
+          <Compass size={16} aria-hidden="true" />
+          <span>{t('focusNarino')}</span>
+        </button>
+      </div>
+
+      {/* Autocomplete Search Results */}
+      {query.trim() && (
+        <ul className="search-results">
+          {results.length ? (
+            results.map((result) => (
+              <li key={result.id}>
+                <button
+                  onClick={() => {
+                    state.select(result.id)
+                    setQuery('')
+                  }}
+                >
+                  <span className="font-semibold">{result.name}</span> ·{' '}
+                  <span className="text-[var(--muted)]">{result.id}</span>
+                </button>
+              </li>
+            ))
+          ) : (
+            <li className="p-3 text-xs text-[var(--muted)]">{t('noMatches')}</li>
+          )}
+        </ul>
+      )}
+
+      {/* Layer Pill Selector */}
+      <fieldset className="layer-picker">
+        <legend className="flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)] mb-2">
+          <Layers size={13} />
+          <span>{t('technology')}</span>
+        </legend>
+        {[...technologies, 'none' as const].map((layer) => (
+          <button
+            key={layer}
+            aria-pressed={layer === state.layer}
+            onClick={() => state.setLayer(layer as Layer)}
+          >
+            {layer === 'none' ? t('none') : layer}
+          </button>
+        ))}
+      </fieldset>
+
+      {/* Mapbox / MapLibre GL Render Container */}
+      <Suspense
+        fallback={
+          <div className="map-wrap h-[400px] grid place-items-center">
+            <p role="status" className="text-sm text-[var(--muted)]">
+              {t('loading')}
+            </p>
+          </div>
+        }
+      >
+        <CoverageMap />
+      </Suspense>
+
+      {/* Map Options Controls */}
+      <div className="map-options">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            className="rounded accent-[var(--accent)]"
+            checked={state.heatmap}
+            onChange={(e) => state.setHeatmap(e.target.checked)}
+          />
+          <span>{t('heatmap')}</span>
+        </label>
+
+        <label className="flex items-center gap-2">
+          <SlidersHorizontal size={14} className="text-[var(--muted)]" />
+          <span>{t('legend')}</span>
+          <select
+            value={state.band}
+            onChange={(e) => state.setBand(e.target.value as LegendBand)}
+          >
+            <option value="all">{t('all')}</option>
+            <option value="low">0–50%</option>
+            <option value="medium">50–90%</option>
+            <option value="high">90–100%</option>
+            <option value="unknown">{t('noReport')}</option>
+          </select>
+        </label>
+      </div>
+
+      <p className="small-copy">{t(state.layer === 'none' ? 'noneNote' : 'methodNote')}</p>
+      <p className="small-copy">{t('pointNote')}</p>
+
+      {/* Sub-Territories Explorer */}
+      {children.length > 0 && (
+        <section className="territory-list">
+          <h2>{t('hierarchy')}</h2>
+          <div>
+            {children.map((c) => (
+              <button key={c.id} onClick={() => state.select(c.id)}>
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
-    {query.trim() && <ul className="search-results">{results.length ? results.map(result =>
-      <li key={result.id}><button onClick={() => { state.select(result.id); setQuery('') }}>{result.name} · {result.id}</button></li>) : <li>{t('noMatches')}</li>}</ul>}
-    <fieldset className="layer-picker"><legend>{t('technology')}</legend>{[...technologies,'none' as const].map(layer =>
-      <button key={layer} aria-pressed={layer === state.layer} onClick={() => state.setLayer(layer as Layer)}>{layer === 'none' ? t('none') : layer}</button>)}</fieldset>
-    <Suspense fallback={<p role="status">{t('loading')}</p>}><CoverageMap /></Suspense>
-    <div className="map-options"><label><input type="checkbox" checked={state.heatmap} onChange={e => state.setHeatmap(e.target.checked)} /> {t('heatmap')}</label>
-      <label>{t('legend')} <select value={state.band} onChange={e => state.setBand(e.target.value as LegendBand)}>
-        <option value="all">{t('all')}</option><option value="low">0–50%</option><option value="medium">50–90%</option><option value="high">90–100%</option><option value="unknown">{t('noReport')}</option></select></label></div>
-    <p className="small-copy">{t(state.layer === 'none' ? 'noneNote' : 'methodNote')}</p>
-    <p className="small-copy">{t('pointNote')}</p>
-    {children.length > 0 && <section className="territory-list"><h2>{t('hierarchy')}</h2><div>{children.map(c => <button key={c.id} onClick={() => state.select(c.id)}>{c.name}</button>)}</div></section>}
-  </div>
+  )
 }
