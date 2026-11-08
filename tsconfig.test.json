@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["vite/client", "node"] },
+  "include": ["src/vite-env.d.ts", "src/renderer/app/**/*.test.ts", "src/renderer/app/**/*.test.tsx", "src/shared/**/*.test.ts", "electron/**/*.test.ts"],
+  "exclude": []
+}
