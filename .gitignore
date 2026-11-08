@@ -37,6 +37,20 @@ design/.next/
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
+
+# Local official inputs, generated data and work artifacts
+data/raw/
+data/processed/
+ADMINISTRATIVO/
+URBANO/
+out/
+.local-backup/
+.pnpm-store/
+coverage/
+test-results/
+*.tsbuildinfo
 
 # IDE
 *.swp
