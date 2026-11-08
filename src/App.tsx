@@ -1,88 +1,35 @@
-import { useEffect } from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { MainLayout } from './renderer/src/components/layout';
-import {
-  DashboardPage,
-  CoveragePage,
-  MapPage,
-  RouteAnalysisPage,
-  ReportsPage,
-  SettingsPage,
-} from './renderer/src/pages';
-import { useThemeStore } from './renderer/src/stores/themeStore';
-import './App.css';
-
-const queryClient = new QueryClient();
+import { useEffect } from 'react'
+import { HashRouter, Route, Routes } from 'react-router-dom'
+import { AppShell } from '@renderer/components/AppShell'
+import { WorkspacePage } from '@renderer/pages/WorkspacePage'
+import { SettingsPage } from '@renderer/pages/SettingsPage'
+import { NotFoundPage } from '@renderer/pages/NotFoundPage'
+import { bindAppearance } from '@renderer/preferences/appearance'
+import { preferencesStore } from '@renderer/preferences/usePreferences'
+import './App.css'
 
 function App() {
-  const isDark = useThemeStore((state) => state.isDark);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [isDark]);
+  useEffect(() => bindAppearance(
+    preferencesStore.getState,
+    preferencesStore.subscribe,
+    window.matchMedia('(prefers-color-scheme: dark)'),
+    document.documentElement,
+  ), [])
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <MainLayout>
-                <DashboardPage />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/coverage"
-            element={
-              <MainLayout>
-                <CoveragePage />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/map"
-            element={
-              <MainLayout>
-                <MapPage />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/route-analysis"
-            element={
-              <MainLayout>
-                <RouteAnalysisPage />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <MainLayout>
-                <ReportsPage />
-              </MainLayout>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <MainLayout>
-                <SettingsPage />
-              </MainLayout>
-            }
-          />
-        </Routes>
-      </Router>
-    </QueryClientProvider>
-  );
+    <HashRouter>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route index element={<WorkspacePage section="overview" />} />
+          <Route path="coverage" element={<WorkspacePage section="coverage" />} />
+          <Route path="map" element={<WorkspacePage section="map" />} />
+          <Route path="reports" element={<WorkspacePage section="reports" />} />
+          <Route path="route-analysis" element={<WorkspacePage section="routes" />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  )
 }
-
-export default App;
+export default App

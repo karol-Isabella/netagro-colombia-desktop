@@ -1,15 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
+import App from './App'
+import { bindAppearance } from '@renderer/preferences/appearance'
+import { preferencesStore } from '@renderer/preferences/usePreferences'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+// Apply the saved appearance before React's first paint.
+const dispose = bindAppearance(preferencesStore.getState, preferencesStore.subscribe,
+  window.matchMedia('(prefers-color-scheme: dark)'), document.documentElement)
+dispose()
 
-// Use contextBridge
-window.ipcRenderer.on('main-process-message', (_event, message) => {
-  console.log(message)
-})
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode><App /></React.StrictMode>,
+)
