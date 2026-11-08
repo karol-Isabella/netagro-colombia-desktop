@@ -521,36 +521,124 @@
 }
 
 /* ==========================================================================
-   AUTHENTICATION & LOGIN (GLASSMORPHISM / APPLE DESIGN)
+   AUTHENTICATION & LOGIN (GLASSMORPHISM & AMBIENT AURORA)
    ========================================================================== */
+@keyframes auroraShift {
+  0% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(45px, -35px) scale(1.12) rotate(120deg);
+  }
+  66% {
+    transform: translate(-30px, 25px) scale(0.92) rotate(240deg);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1) rotate(360deg);
+  }
+}
+
+@keyframes auroraCyanFloat {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-50px, 40px) scale(1.18);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 32px 18px;
-  background: radial-gradient(circle at 50% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
-              radial-gradient(circle at 80% 80%, rgba(5, 150, 105, 0.08) 0%, transparent 50%),
-              var(--canvas);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--canvas);
+}
+
+.aurora-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.aurora-orb-1 {
+  position: absolute;
+  top: -15%;
+  left: 15%;
+  width: 580px;
+  height: 580px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(5, 150, 105, 0.08) 55%, transparent 70%);
+  filter: blur(65px);
+  border-radius: 50%;
+  animation: auroraShift 20s ease-in-out infinite alternate;
+}
+
+.aurora-orb-2 {
+  position: absolute;
+  bottom: -10%;
+  right: 12%;
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.24) 0%, rgba(14, 165, 233, 0.07) 50%, transparent 70%);
+  filter: blur(75px);
+  border-radius: 50%;
+  animation: auroraCyanFloat 24s ease-in-out infinite alternate;
+}
+
+.aurora-orb-3 {
+  position: absolute;
+  top: 35%;
+  left: -8%;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.22) 0%, rgba(20, 184, 166, 0.06) 50%, transparent 70%);
+  filter: blur(70px);
+  border-radius: 50%;
+  animation: auroraShift 28s ease-in-out infinite reverse;
+}
+
+.dark .aurora-orb-1 {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.05) 55%, transparent 70%);
+}
+
+.dark .aurora-orb-2 {
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, rgba(14, 165, 233, 0.04) 50%, transparent 70%);
+}
+
+.dark .aurora-orb-3 {
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.16) 0%, rgba(20, 184, 166, 0.04) 50%, transparent 70%);
 }
 
 .auth-card {
+  position: relative;
+  z-index: 10;
   max-width: 440px;
   width: 100%;
-  padding: 40px 36px;
+  padding: 42px 38px;
   border-radius: 28px;
   background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12),
-              0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.12),
+              0 0 35px rgba(16, 185, 129, 0.06),
+              0 0 0 1px rgba(255, 255, 255, 0.6) inset;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
 }
 
 .dark .auth-card {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.55),
+              0 0 35px rgba(16, 185, 129, 0.04),
               0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 
