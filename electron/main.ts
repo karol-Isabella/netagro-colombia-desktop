@@ -1,4 +1,5 @@
-import { app, BrowserWindow, session } from 'electron'
+import { app, BrowserWindow, session, dialog } from 'electron'
+import { writeFile } from 'node:fs/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
 import { registerAppIpc } from '@main/ipc'
@@ -6,6 +7,7 @@ import { registerDataIpc, createRouteRegistrar } from '@main/dataIpc'
 import { contracts } from '@shared/contracts'
 import { AnalysisService } from '@main/services/analysis'
 import { AuthService } from '@main/services/auth'
+import { rankingCsv, centersCsv } from '@main/services/export'
 import { CoverageRepository } from '@main/services/repository'
 import { contentSecurityPolicy, isTrustedDocument } from '@main/security'
 
@@ -75,6 +77,19 @@ void app.whenReady().then(() => {
   route('auth:register', contracts['auth:register'], input => auth.register(input), false)
   route('auth:login', contracts['auth:login'], input => auth.login(input), false)
   route('auth:logout', contracts['auth:logout'], () => { auth.logout(); return null }, false)
+  route('export:csv', contracts['export:csv'], async input => {
+    if (!window) throw new Error('EXPORT_FAILED')
+    const { data } = await repository.load()
+    const csv = input.kind === 'rankings' ? rankingCsv(data,input.territoryId,input.layer) : centersCsv(data,input.territoryId,input.layer)
+    const destination = await dialog.showSaveDialog(window, {
+      defaultPath: `NetAgro-${input.kind}-${input.territoryId}-${data.metadata.period}.csv`,
+      filters: [{ name: 'CSV', extensions: ['csv'] }],
+    })
+    if (destination.canceled || !destination.filePath) return { saved: false }
+    auth.requireSession()
+    try { await writeFile(destination.filePath, csv, 'utf8') } catch { throw new Error('EXPORT_FAILED') }
+    return { saved: true }
+  })
   const analysis = new AnalysisService(repository, () => process.env.MAIN_VITE_GEMINI_API_KEY)
   let analyzing = false
   route('analysis:run', contracts['analysis:run'], async input => {

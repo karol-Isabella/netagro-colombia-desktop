@@ -1,6 +1,6 @@
-const { app } = require('electron')
+const { app, dialog } = require('electron')
 const assert = require('node:assert/strict')
-const { mkdirSync, mkdtempSync, writeFileSync } = require('node:fs')
+const { mkdirSync, mkdtempSync, writeFileSync, readFileSync } = require('node:fs')
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
 
@@ -9,6 +9,12 @@ mkdirSync(output, { recursive: true })
 app.setPath('userData', mkdtempSync(path.join(output, 'profile-')))
 app.disableHardwareAcceleration()
 const errors = []
+const exported = []
+dialog.showSaveDialog = async (_window, options) => {
+  const filePath = path.join(output, path.basename(options.defaultPath))
+  exported.push(filePath)
+  return { canceled: false, filePath }
+}
 
 app.on('browser-window-created', (_event, window) => {
   // Run the actual Main window without interrupting the user's desktop.
@@ -82,7 +88,15 @@ async function verify(window) {
   assert.equal(metadata.version, require('../package.json').version)
   const policy = await evaluate(web, `return document.querySelector('meta[http-equiv="Content-Security-Policy"]').content;`)
   assert.ok(policy.includes("connect-src 'none'"))
+  await settle(web, "document.querySelector('.stats-grid') !== null")
+  await capture(web, 'dashboard.png')
+  await evaluate(web, "document.querySelector('a[href=\"#/map\"]').click();")
   await settle(web, "document.querySelector('.coverage-map')?.dataset.rendered === 'true'")
+  await evaluate(web, "document.querySelector('.map-toolbar .action-button').click();")
+  await settle(web, "document.querySelector('.territory-panel h2')?.textContent === 'NARIÑO' && document.querySelector('.coverage-map')?.dataset.rendered === 'true'")
+  await evaluate(web, "document.querySelector('.map-options input').click(); [...document.querySelectorAll('.layer-picker button')].find(b => b.textContent === 'Sin cobertura').click();")
+  await settle(web, "document.querySelector('.coverage-map')?.dataset.rendered === 'true'")
+  await capture(web, 'narino-uncovered.png')
   await evaluate(web, "document.querySelector('.analysis-panel .action-button').click();")
   await settle(web, "document.querySelector('.analysis-result')?.textContent.includes('Reglas locales')")
   await capture(web, 'overview-light.png')
@@ -95,6 +109,17 @@ async function verify(window) {
   `)
   await settle(web, "document.documentElement.lang === 'en' && document.documentElement.classList.contains('dark')")
   await capture(web, 'overview-dark-en.png')
+  await evaluate(web, "document.querySelector('a[href=\"#/reports\"]').click();")
+  await settle(web, "document.querySelector('tbody tr') !== null")
+  assert.equal(await evaluate(web, 'return document.querySelectorAll("tbody tr").length;'), 50)
+  const csvResult = await evaluate(web, "return window.netAgro.exportCsv({territoryId:'52',layer:'4G',kind:'rankings'});")
+  assert.deepEqual(csvResult,{ok:true,data:{saved:true}})
+  assert.ok(readFileSync(exported[0],'utf8').includes('PASTO'))
+  assert.ok(!readFileSync(exported[0],'utf8').includes('MEDELLÍN'))
+  const centersResult = await evaluate(web, "return window.netAgro.exportCsv({territoryId:'52',layer:'none',kind:'centers'});")
+  assert.deepEqual(centersResult,{ok:true,data:{saved:true}})
+  assert.equal(readFileSync(exported[1],'utf8').trim().split('\n').length,567)
+  await capture(web, 'rankings.png')
   await evaluate(web, `document.querySelector('a[href="#/settings"]').click();`)
   await settle(web, "document.querySelector('.about-card')?.textContent.includes('Version')")
   const ready = new Promise(resolve => web.once('did-finish-load', resolve))
@@ -106,8 +131,11 @@ async function verify(window) {
   await settle(web, 'window.innerWidth <= 820')
   assert.equal(await evaluate(web, `return document.documentElement.scrollWidth <= window.innerWidth;`), true)
   await capture(web, 'settings-compact.png')
+  await evaluate(web, "document.querySelector('.account-note button').click();")
+  await settle(web, "document.querySelector('.auth-form') !== null")
+  assert.deepEqual(await evaluate(web, 'return window.netAgro.getCoverage();'),{ok:false,error:'AUTH_REQUIRED'})
   assert.deepEqual(errors, [])
-  const result = { passed: true, metadata, security: { sandbox: security.sandbox, contextIsolation: security.contextIsolation, nodeIntegration: security.nodeIntegration }, checks: ['production boot', 'real IPC', 'no raw Electron API', 'production CSP', 'theme and locale', 'persistence after reload', 'compact layout', 'no renderer or preload errors'] }
+  const result = { passed: true, metadata, security: { sandbox: security.sandbox, contextIsolation: security.contextIsolation, nodeIntegration: security.nodeIntegration }, checks: ['production boot', 'registration through UI', 'session-gated IPC', 'offline map and heatmap', 'Narino selection', 'local diagnosis', 'rankings', 'real CSV export in selected scope', 'production CSP', 'theme and locale', 'persistence after reload', 'compact layout', 'logout blocks data', 'no renderer or preload errors'] }
   writeFileSync(path.join(output, 'electron-smoke.json'), JSON.stringify(result, null, 2))
   console.log(JSON.stringify(result, null, 2))
   app.exit(0)

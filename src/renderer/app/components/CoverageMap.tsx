@@ -11,7 +11,7 @@ setWorkerUrl(workerUrl)
 export function CoverageMap() {
   const host = useRef<HTMLDivElement>(null), map = useRef<LibreMap | null>(null)
   const [loaded, setLoaded] = useState(false), [failed, setFailed] = useState(false)
-  const { data, maps, selectedId, layer, heatmap, band, select, selectCenter } = useCoverageStore()
+  const { data, maps, selectedId, centerId, layer, heatmap, band, select, selectCenter } = useCoverageStore()
   const t = useTranslation()
   const view = useMemo(() => data && maps ? mapView(data, maps, selectedId, layer) : null, [data, maps, selectedId, layer])
   useEffect(() => {
@@ -65,7 +65,7 @@ export function CoverageMap() {
       band === 'medium' ? ['all', ['>=', ['get','value'], 0.5], ['<', ['get','value'], 0.9]] : ['>=', ['get','value'], 0.9]
     instance.setFilter('coverage-fill', filter)
     instance.setPaintProperty('coverage-fill', 'fill-color', layer === 'none' ?
-      ['interpolate', ['linear'], ['max', ['get','value'], 0], 0, '#e3ece7', 0.1, '#e6bb5b', 1, '#b72d2d'] :
+      ['case', ['<', ['get','value'], 0], '#aeb8bd', ['interpolate', ['linear'], ['get','value'], 0, '#e3ece7', 0.1, '#e6bb5b', 1, '#b72d2d']] :
       ['case', ['<', ['get','value'], 0], '#aeb8bd', ['interpolate', ['linear'], ['get','value'], 0, '#c8463b', 0.5, '#e6bb5b', 0.9, '#79b991', 1, '#24654e']])
   }, [loaded, view, heatmap, band, layer])
   useEffect(() => {
@@ -75,6 +75,11 @@ export function CoverageMap() {
     const bounds = bbox(features)
     map.current.fitBounds([[bounds[0],bounds[1]],[bounds[2],bounds[3]]], { padding: 35, duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450 })
   }, [loaded, selectedId, data, maps])
+  useEffect(() => {
+    const center = data?.centers.find(c => c.id === centerId)
+    if (loaded && center?.coordinates) map.current?.flyTo({ center: center.coordinates, zoom: 11,
+      duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450 })
+  }, [centerId, data, loaded])
   return <div className="map-wrap"><div className="coverage-map" ref={host} role="region" aria-label={t('map')} />
     {failed && <p role="alert" className="map-notice">{t('mapError')}</p>}
     <span className="map-credit">{t('sourceNote')}</span></div>

@@ -43,6 +43,7 @@ export const contracts = {
   'auth:register': { request: credentialsSchema, response: resultSchema(sessionSchema) },
   'auth:login': { request: credentialsSchema, response: resultSchema(sessionSchema) },
   'auth:logout': { request: z.undefined(), response: resultSchema(z.null()) },
+  'export:csv': { request: z.object({ territoryId: z.string().regex(/^(CO|\d{2}|\d{5})$/), layer: z.enum(['2G','3G','4G','5G','none']), kind: z.enum(['rankings','centers']) }).strict(), response: resultSchema(z.object({ saved: z.boolean() }).strict()) },
   'analysis:run': { request: z.object({ territoryId: z.string().regex(/^(CO|\d{2}|\d{5})$/), layer: z.enum(['2G','3G','4G','5G','none']), locale: localeSchema, online: z.boolean() }).strict(), response: resultSchema(analysisSchema) },
 } as const
 
@@ -57,5 +58,6 @@ export interface DesktopApi {
   register: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:register']['response']>>
   login: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:login']['response']>>
   logout: () => Promise<z.infer<typeof contracts['auth:logout']['response']>>
+  exportCsv: (input: z.infer<typeof contracts['export:csv']['request']>) => Promise<z.infer<typeof contracts['export:csv']['response']>>
   analyze: (input: z.infer<typeof contracts['analysis:run']['request']>) => Promise<z.infer<typeof contracts['analysis:run']['response']>>
 }

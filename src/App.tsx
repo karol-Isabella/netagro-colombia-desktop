@@ -4,6 +4,8 @@ import { AppShell } from '@renderer/components/AppShell'
 import { AuthGate } from '@renderer/components/AuthGate'
 import { WorkspacePage } from '@renderer/pages/WorkspacePage'
 import { CoveragePage } from '@renderer/pages/CoveragePage'
+import { OverviewPage } from '@renderer/pages/OverviewPage'
+import { ReportsPage } from '@renderer/pages/ReportsPage'
 import { SettingsPage } from '@renderer/pages/SettingsPage'
 import { NotFoundPage } from '@renderer/pages/NotFoundPage'
 import { bindAppearance } from '@renderer/preferences/appearance'
@@ -23,10 +25,10 @@ function App() {
       <AuthGate>
       <Routes>
         <Route element={<AppShell />}>
-          <Route index element={<CoveragePage title="overview" />} />
+          <Route index element={<OverviewPage />} />
           <Route path="coverage" element={<CoveragePage title="coverage" />} />
           <Route path="map" element={<CoveragePage />} />
-          <Route path="reports" element={<WorkspacePage section="reports" />} />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="route-analysis" element={<WorkspacePage section="routes" />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<NotFoundPage />} />

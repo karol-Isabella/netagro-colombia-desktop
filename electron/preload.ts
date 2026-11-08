@@ -21,6 +21,7 @@ const api: DesktopApi = Object.freeze({
   register: (input: z.infer<typeof credentialsSchema>) => invoke('auth:register', input),
   login: (input: z.infer<typeof credentialsSchema>) => invoke('auth:login', input),
   logout: () => invoke('auth:logout', undefined),
+  exportCsv: (input: z.infer<typeof contracts['export:csv']['request']>) => invoke('export:csv', input),
   analyze: (input: z.infer<typeof contracts['analysis:run']['request']>) => invoke('analysis:run', input),
 })
 

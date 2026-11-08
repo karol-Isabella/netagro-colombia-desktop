@@ -1,6 +1,7 @@
 import type { Locale } from '@shared/contracts'
 
 export const spanish = {
+  exportCenters: 'Exportar centros CSV',
   period: "Periodo",
   technology: "Tecnología",
   none: "Sin cobertura",
@@ -117,6 +118,7 @@ type Dictionary = Record<MessageKey, string>
 export const messages: Record<Locale, Dictionary> = {
   es: spanish,
   en: {
+    exportCenters: 'Export centers CSV',
     period: "Period",
     technology: "Technology",
     none: "No coverage",

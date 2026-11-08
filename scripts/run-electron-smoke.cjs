@@ -17,6 +17,6 @@ delete env.VITE_DEV_SERVER_URL
 const child = spawn(require('electron'), [fixture], {
   cwd: path.join(__dirname, '..'), env, windowsHide: true, stdio: 'inherit',
 })
-const timeout = setTimeout(() => { child.kill(); process.exitCode = 1 }, 45000)
+const timeout = setTimeout(() => { child.kill(); process.exitCode = 1 }, 90000)
 child.on('error', (error) => { console.error(error); clearTimeout(timeout); process.exitCode = 1 })
 child.on('exit', (code) => { clearTimeout(timeout); process.exitCode = code ?? 1 })

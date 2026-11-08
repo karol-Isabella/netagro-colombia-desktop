@@ -5,7 +5,7 @@ import { usePreferences } from '@renderer/preferences/usePreferences'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { AnalysisPanel } from './AnalysisPanel'
 export function TerritoryPanel() {
-  const { data, selectedId, layer, centerId } = useCoverageStore()
+  const { data, selectedId, layer, centerId, selectCenter } = useCoverageStore()
   const { locale } = usePreferences()
   const t = useTranslation()
   if (!data) return <div className="territory-note"><h2>{t('noSelection')}</h2><p>{t('noSelectionDescription')}</p></div>
@@ -23,5 +23,6 @@ export function TerritoryPanel() {
     {center && <div className="center-detail"><h3>{t('centerDetail')}</h3><p>{center.name} · {center.id}</p>
       <p>{percent(layer === 'none' ? (center.none ? 1 : 0) : center.coverage[layer],locale)}</p><p className="small-copy">{t('pointNote')}</p></div>}
     <AnalysisPanel />
+    <section className="weak-centers"><h3>{t('weakZones')}</h3>{centers.some(c => c.none) ? <ul>{centers.filter(c => c.none).slice(0,20).map(c => <li key={c.id}><button onClick={() => selectCenter(c.id)}>{c.name} · {c.id}</button></li>)}</ul> : <p className="small-copy">{t('noWeak')}</p>}</section>
   </section>
 }
