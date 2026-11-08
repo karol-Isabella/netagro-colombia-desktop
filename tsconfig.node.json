@@ -30,6 +30,7 @@
     "vite.config.ts",
     "vitest.config.ts",
     "electron",
-    "src/shared"
+    "src/shared",
+    "scripts/data"
   ]
 }

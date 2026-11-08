@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/shared/**/*.test.ts', 'src/renderer/app/**/*.test.{ts,tsx}', 'electron/**/*.test.ts'],
+    include: ['src/shared/**/*.test.ts', 'src/renderer/app/**/*.test.{ts,tsx}', 'electron/**/*.test.ts', 'scripts/data/**/*.test.ts'],
     environment: 'node',
     clearMocks: true,
   },

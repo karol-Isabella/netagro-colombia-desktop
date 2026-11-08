@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "data:build": "tsx scripts/data/build.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "build": "pnpm typecheck && vite build",
     "package": "pnpm build && electron-builder",
@@ -28,27 +29,32 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.0",
-    "jsdom": "^25.0.0",
-    "vitest": "^2.1.9",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22.0.0",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
+    "@types/shapefile": "^0.6.4",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
+    "csv-parse": "^7.0.3",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^25.0.0",
     "postcss": "^8.4.33",
+    "shapefile": "^0.6.6",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.23.15",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
-    "vite-plugin-electron": "^0.28.6"
+    "vite-plugin-electron": "^0.28.6",
+    "vitest": "^2.1.9"
   },
   "main": "dist-electron/main.js"
 }
