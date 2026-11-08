@@ -15,6 +15,14 @@ const directory = path.dirname(fileURLToPath(import.meta.url))
 const rendererPath = path.join(directory, '../dist/index.html')
 const devUrl = !app.isPackaged ? process.env['VITE_DEV_SERVER_URL'] : undefined
 const trustedDocument = devUrl ?? pathToFileURL(rendererPath).href
+const smokeTest = app.commandLine.hasSwitch('smoke-test')
+if (smokeTest) {
+  const profile = app.commandLine.getSwitchValue('user-data-dir')
+  if (!path.isAbsolute(profile)) throw new Error('Smoke tests require an absolute isolated profile')
+  app.setPath('userData', profile)
+  app.disableHardwareAcceleration()
+}
+app.setAppUserModelId('co.netagro.colombia')
 let window: BrowserWindow | null = null
 
 function createWindow() {
@@ -37,7 +45,8 @@ function createWindow() {
     },
   })
   const currentWindow = window
-  currentWindow.once('ready-to-show', () => currentWindow.show())
+  currentWindow.once('ready-to-show', () => { if (!smokeTest) currentWindow.show() })
+  if (smokeTest) currentWindow.webContents.setBackgroundThrottling(false)
   currentWindow.on('closed', () => { if (window === currentWindow) window = null })
   currentWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   currentWindow.webContents.on('will-navigate', (event, url) => {

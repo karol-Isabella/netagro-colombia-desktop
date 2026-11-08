@@ -1,19 +1,21 @@
 {
   "name": "netagro",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "data:build": "tsx scripts/data/build.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "build": "pnpm typecheck && vite build",
-    "package": "pnpm build && electron-builder",
+    "package": "pnpm build && pnpm data:verify && electron-builder --win",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:smoke": "node scripts/run-electron-smoke.cjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "data:verify": "node scripts/verify-data.cjs",
+    "test:packaged": "node scripts/smoke-packaged.cjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
@@ -56,5 +58,7 @@
     "vite-plugin-electron": "^0.28.6",
     "vitest": "^2.1.9"
   },
-  "main": "dist-electron/main.js"
+  "main": "dist-electron/main.js",
+  "description": "Offline mobile coverage analysis for Colombia using CRC and DANE data",
+  "author": "NetAgro"
 }
