@@ -1,66 +1,67 @@
-import { app, BrowserWindow } from 'electron'
-import { fileURLToPath } from 'node:url'
+import { app, BrowserWindow, session } from 'electron'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
+import { registerAppIpc } from '@main/ipc'
+import { contentSecurityPolicy, isTrustedDocument } from '@main/security'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.mjs
-// │
-process.env.APP_ROOT = path.join(__dirname, '..')
-
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
-export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
-export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
-export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
-
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
-
-let win: BrowserWindow | null
+const directory = path.dirname(fileURLToPath(import.meta.url))
+const rendererPath = path.join(directory, '../dist/index.html')
+const devUrl = !app.isPackaged ? process.env['VITE_DEV_SERVER_URL'] : undefined
+const trustedDocument = devUrl ?? pathToFileURL(rendererPath).href
+let window: BrowserWindow | null = null
 
 function createWindow() {
-  win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+  window = new BrowserWindow({
+    title: 'NetAgro Colombia',
+    width: 1440,
+    height: 940,
+    minWidth: 820,
+    minHeight: 600,
+    show: false,
+    backgroundColor: '#f5f6f8',
+    autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
+      preload: path.join(directory, 'preload.cjs'),
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+      webSecurity: true,
+      webviewTag: false,
     },
   })
-
-  // Test active push message to Renderer-process.
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
+  const currentWindow = window
+  currentWindow.once('ready-to-show', () => currentWindow.show())
+  currentWindow.on('closed', () => { if (window === currentWindow) window = null })
+  currentWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  currentWindow.webContents.on('will-navigate', (event, url) => {
+    if (!isTrustedDocument(url, trustedDocument)) event.preventDefault()
   })
-
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL)
-  } else {
-    // win.loadFile('dist/index.html')
-    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
-  }
+  currentWindow.webContents.on('will-attach-webview', (event) => event.preventDefault())
+  const loading = devUrl ? currentWindow.loadURL(devUrl) : currentWindow.loadFile(rendererPath)
+  void loading.catch((error: unknown) => {
+    console.error('Unable to load NetAgro', error)
+    app.quit()
+  })
 }
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-    win = null
-  }
+  if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow()
-  }
+void app.whenReady().then(() => {
+  session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false))
+  session.defaultSession.setPermissionCheckHandler(() => false)
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({ responseHeaders: {
+      ...details.responseHeaders,
+      'Content-Security-Policy': [contentSecurityPolicy(Boolean(devUrl))],
+    } })
+  })
+  registerAppIpc(() => window, trustedDocument, {
+    name: 'NetAgro Colombia', version: app.getVersion(), platform: process.platform,
+  })
+  createWindow()
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
 })
-
-app.whenReady().then(createWindow)
