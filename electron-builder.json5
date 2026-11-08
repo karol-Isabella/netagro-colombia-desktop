@@ -1,22 +1,35 @@
-// @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "co.netagro.colombia",
+  "productName": "NetAgro Colombia",
   "asar": true,
-  "productName": "YourAppName",
+  "npmRebuild": false,
+  "electronDist": "node_modules/electron/dist",
   "directories": {
     "output": "release/${version}"
   },
   "files": [
-    "dist",
-    "dist-electron"
+    "dist/**/*",
+    "dist-electron/**/*",
+    "package.json",
+    "!node_modules/**/*",
+    "!**/.env*"
   ],
-  "mac": {
-    "target": [
-      "dmg"
-    ],
-    "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
-  },
+  "extraResources": [
+    {
+      "from": "data/processed",
+      "to": "data",
+      "filter": [
+        "coverage.json",
+        "departments.geojson",
+        "municipalities.geojson",
+        "centers.geojson",
+        "rankings.json",
+        "metadata.json",
+        "manifest.json"
+      ]
+    }
+  ],
   "win": {
     "target": [
       {
@@ -26,18 +39,15 @@
         ]
       }
     ],
-    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
+    "artifactName": "NetAgro-Colombia-${version}-Setup.${ext}"
   },
   "nsis": {
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": false
-  },
-  "linux": {
-    "target": [
-      "AppImage"
-    ],
-    "artifactName": "${productName}-Linux-${version}.${ext}"
+    "deleteAppDataOnUninstall": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "NetAgro Colombia"
   }
 }
