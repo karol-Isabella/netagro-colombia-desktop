@@ -21,8 +21,8 @@ export type Theme = z.infer<typeof themeSchema>
 export type Locale = z.infer<typeof localeSchema>
 export type Preferences = z.infer<typeof preferencesSchema>
 export const credentialsSchema = z.object({
-  username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,40}$/),
-  password: z.string().min(10).max(128),
+  username: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{1,20}$/),
+  password: z.string().min(6).max(20),
 }).strict()
 const sessionSchema = z.object({ username: z.string().nullable(), hasAccounts: z.boolean() }).strict()
 

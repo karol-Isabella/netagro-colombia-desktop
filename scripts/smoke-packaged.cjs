@@ -84,7 +84,7 @@ async function run() {
     assert.deepEqual(denied,{ok:false,error:'AUTH_REQUIRED'})
     const info=await evaluate('window.netAgro.getAppInfo()')
     assert.equal(info.version,manifest.version)
-    const registered=await evaluate('window.netAgro.register({username:"packaged-user",password:"packaged-test-password"})')
+    const registered=await evaluate('window.netAgro.register({username:"packaged-user",password:"packaged-pass-123"})')
     assert.equal(registered.ok,true)
     console.log('Packaged registration passed')
     await send('Page.reload')
