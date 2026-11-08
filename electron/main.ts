@@ -2,6 +2,8 @@ import { app, BrowserWindow, session } from 'electron'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
 import { registerAppIpc } from '@main/ipc'
+import { registerDataIpc } from '@main/dataIpc'
+import { CoverageRepository } from '@main/services/repository'
 import { contentSecurityPolicy, isTrustedDocument } from '@main/security'
 
 const directory = path.dirname(fileURLToPath(import.meta.url))
@@ -60,6 +62,9 @@ void app.whenReady().then(() => {
   registerAppIpc(() => window, trustedDocument, {
     name: 'NetAgro Colombia', version: app.getVersion(), platform: process.platform,
   })
+  registerDataIpc(() => window, trustedDocument, new CoverageRepository(
+    app.isPackaged ? path.join(process.resourcesPath, 'data') : path.join(directory, '../data/processed'),
+  ))
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
