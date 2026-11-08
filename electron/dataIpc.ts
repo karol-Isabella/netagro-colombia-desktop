@@ -14,7 +14,9 @@ export function createRouteRegistrar(getWindow: () => BrowserWindow | null, trus
           !isTrustedDocument(event.senderFrame.url, trusted)) return { ok: false, error: 'AUTH_REQUIRED' }
         if (requiresSession) authorize()
         const input = spec.request.parse(request)
-        return spec.response.parse({ ok: true, data: await callback(input) })
+        const data = await callback(input)
+        if (requiresSession) authorize()
+        return spec.response.parse({ ok: true, data })
       } catch (error) {
         if (error instanceof z.ZodError) return { ok: false, error: 'INVALID_INPUT' }
         const known = errorCodeSchema.safeParse(error instanceof Error ? error.message : '')
@@ -23,8 +25,8 @@ export function createRouteRegistrar(getWindow: () => BrowserWindow | null, trus
     })
   }
 }
-export function registerDataIpc(getWindow: () => BrowserWindow | null, trusted: string, repository: CoverageRepository) {
-  const route = createRouteRegistrar(getWindow, trusted)
+export function registerDataIpc(getWindow: () => BrowserWindow | null, trusted: string, repository: CoverageRepository, authorize: () => void) {
+  const route = createRouteRegistrar(getWindow, trusted, authorize)
   route('data:load', contracts['data:load'], async () => (await repository.load()).data)
   route('data:maps', contracts['data:maps'], async () => (await repository.load()).maps)
 }
