@@ -1,8 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { LayoutDashboard, RadioTower, Map, FileText, Settings, Sprout, MapPin, HardDrive } from 'lucide-react'
+import { LayoutDashboard, RadioTower, Map, FileText, Settings, Sprout, HardDrive } from 'lucide-react'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { type MessageKey } from '@renderer/i18n/messages'
 import { PreferencesPanel } from './PreferencesPanel'
+import { TerritoryPanel } from './TerritoryPanel'
 
 const navigation = [
   { to: '/', label: 'overview', icon: LayoutDashboard },
@@ -34,11 +35,7 @@ export function AppShell() {
       </aside>
       <main id="main-content" tabIndex={-1} className="min-w-0"><Outlet /></main>
       <aside className="inspector">
-        <div className="territory-note">
-          <div className="detail-icon"><MapPin size={21} aria-hidden="true" /></div>
-          <h2>{t('noSelection')}</h2>
-          <p>{t('noSelectionDescription')}</p>
-        </div>
+        <TerritoryPanel />
         <PreferencesPanel />
       </aside>
     </div>

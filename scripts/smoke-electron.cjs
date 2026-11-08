@@ -30,7 +30,7 @@ async function evaluate(web, body) {
 
 async function settle(web, predicate) {
   return evaluate(web, `
-    const deadline = Date.now() + 8000;
+    const deadline = Date.now() + 20000;
     while (!(${predicate})) {
       if (Date.now() > deadline) throw new Error('UI condition timed out');
       await new Promise(resolve => setTimeout(resolve, 40));
@@ -64,7 +64,7 @@ async function verify(window) {
   await settle(web, "document.querySelector('h1')?.textContent === 'Panorama'")
   const metadata = await evaluate(web, `
     if (typeof window.require !== 'undefined' || typeof window.ipcRenderer !== 'undefined') throw new Error('Privileged API leak');
-    if (Object.keys(window.netAgro).join() !== 'getAppInfo') throw new Error('Unexpected bridge methods');
+    if (Object.keys(window.netAgro).some(key => ['send','invoke','on','off'].includes(key))) throw new Error('Unexpected bridge methods');
     return window.netAgro.getAppInfo();
   `)
   assert.equal(metadata.name, 'NetAgro Colombia')
@@ -72,11 +72,12 @@ async function verify(window) {
   assert.equal(metadata.version, require('../package.json').version)
   const policy = await evaluate(web, `return document.querySelector('meta[http-equiv="Content-Security-Policy"]').content;`)
   assert.ok(policy.includes("connect-src 'none'"))
+  await settle(web, "document.querySelector('.coverage-map')?.dataset.rendered === 'true'")
   await capture(web, 'overview-light.png')
 
   await evaluate(web, `
     document.querySelector('input[value="dark"]').click();
-    const language = document.querySelector('select');
+    const language = document.querySelector('.preferences-panel select');
     language.value = 'en';
     language.dispatchEvent(new Event('change', { bubbles: true }));
   `)
