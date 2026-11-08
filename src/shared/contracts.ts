@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { datasetSchema, mapsSchema } from './dataSchema'
+import { analysisSchema } from './analysis'
 
 export const errorCodeSchema = z.enum(['AUTH_REQUIRED', 'AUTH_FAILED', 'USER_EXISTS', 'RATE_LIMIT', 'STORAGE_ERROR', 'DATA_UNAVAILABLE', 'INVALID_INPUT', 'EXPORT_FAILED', 'INTERNAL'])
 export type ErrorCode = z.infer<typeof errorCodeSchema>
@@ -33,6 +34,7 @@ export const contracts = {
   },
   'data:load': { request: z.undefined(), response: resultSchema(datasetSchema) },
   'data:maps': { request: z.undefined(), response: resultSchema(mapsSchema) },
+  'analysis:run': { request: z.object({ territoryId: z.string().regex(/^(CO|\d{2}|\d{5})$/), layer: z.enum(['2G','3G','4G','5G','none']), locale: localeSchema, online: z.boolean() }).strict(), response: resultSchema(analysisSchema) },
 } as const
 
 export type AppInfo = z.infer<typeof appInfoSchema>
@@ -42,4 +44,5 @@ export interface DesktopApi {
   getAppInfo: () => Promise<AppInfo>
   getCoverage: () => Promise<z.infer<typeof contracts['data:load']['response']>>
   getMaps: () => Promise<z.infer<typeof contracts['data:maps']['response']>>
+  analyze: (input: z.infer<typeof contracts['analysis:run']['request']>) => Promise<z.infer<typeof contracts['analysis:run']['response']>>
 }

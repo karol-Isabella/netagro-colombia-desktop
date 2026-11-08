@@ -2,7 +2,9 @@ import { app, BrowserWindow, session } from 'electron'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
 import { registerAppIpc } from '@main/ipc'
-import { registerDataIpc } from '@main/dataIpc'
+import { registerDataIpc, createRouteRegistrar } from '@main/dataIpc'
+import { contracts } from '@shared/contracts'
+import { AnalysisService } from '@main/services/analysis'
 import { CoverageRepository } from '@main/services/repository'
 import { contentSecurityPolicy, isTrustedDocument } from '@main/security'
 
@@ -62,9 +64,13 @@ void app.whenReady().then(() => {
   registerAppIpc(() => window, trustedDocument, {
     name: 'NetAgro Colombia', version: app.getVersion(), platform: process.platform,
   })
-  registerDataIpc(() => window, trustedDocument, new CoverageRepository(
+  const repository = new CoverageRepository(
     app.isPackaged ? path.join(process.resourcesPath, 'data') : path.join(directory, '../data/processed'),
-  ))
+  )
+  registerDataIpc(() => window, trustedDocument, repository)
+  const route = createRouteRegistrar(() => window, trustedDocument)
+  const analysis = new AnalysisService(repository, () => process.env.MAIN_VITE_GEMINI_API_KEY)
+  route('analysis:run', contracts['analysis:run'], input => analysis.analyze(input))
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

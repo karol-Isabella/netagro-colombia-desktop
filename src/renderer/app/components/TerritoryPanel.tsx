@@ -3,6 +3,7 @@ import { useCoverageStore } from '@renderer/services/coverageStore'
 import { percent, territoryView } from '@renderer/services/selectors'
 import { usePreferences } from '@renderer/preferences/usePreferences'
 import { useTranslation } from '@renderer/i18n/useTranslation'
+import { AnalysisPanel } from './AnalysisPanel'
 export function TerritoryPanel() {
   const { data, selectedId, layer, centerId } = useCoverageStore()
   const { locale } = usePreferences()
@@ -21,5 +22,6 @@ export function TerritoryPanel() {
     <p className="small-copy">{t(layer === 'none' ? 'noneNote' : 'methodNote')}</p>
     {center && <div className="center-detail"><h3>{t('centerDetail')}</h3><p>{center.name} · {center.id}</p>
       <p>{percent(layer === 'none' ? (center.none ? 1 : 0) : center.coverage[layer],locale)}</p><p className="small-copy">{t('pointNote')}</p></div>}
+    <AnalysisPanel />
   </section>
 }

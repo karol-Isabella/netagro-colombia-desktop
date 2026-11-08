@@ -17,6 +17,7 @@ const api: DesktopApi = Object.freeze({
   },
   getCoverage: () => invoke('data:load', undefined),
   getMaps: () => invoke('data:maps', undefined),
+  analyze: (input: z.infer<typeof contracts['analysis:run']['request']>) => invoke('analysis:run', input),
 })
 
 contextBridge.exposeInMainWorld('netAgro', api)
