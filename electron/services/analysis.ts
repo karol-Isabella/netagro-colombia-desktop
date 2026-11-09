@@ -38,7 +38,7 @@ export class AnalysisService {
     if (!input.online) return local('offline')
     const key = this.apiKey()
     if (!key) return local('not-configured')
-    for (const model of ['gemini-3.1-flash-lite']) {
+    for (const model of ['gemini-3.5-flash-lite']) {
       let response: Response
       try {
         response = await this.request(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
@@ -61,7 +61,7 @@ export class AnalysisService {
         const text = responseText(body)
         const content = analysisTextSchema.parse(JSON.parse(text))
         return analysisSchema.parse({ ...content, provider: 'gemini', model, territoryId: territory.id, period: metadata.period, fallbackReason: null })
-      } catch { if (model === 'gemini-3.1-flash-lite') return local('invalid-response') }
+      } catch { if (model === 'gemini-3.5-flash-lite') return local('invalid-response') }
     }
     return local('provider-error')
   }

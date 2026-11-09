@@ -96,7 +96,7 @@ en vivo, guarda tu clave de Google AI Studio en Preferencias → Inteligencia
 artificial y activa “Consultar Gemini en línea” al analizar. Main la cifra con
 el almacén seguro del sistema operativo y no se incluye en el instalador.
 
-Main consulta Gemini REST con el modelo gemini-3.1-flash-lite. Envía métricas agregadas públicas
+Main consulta Gemini REST con el modelo estable gemini-3.5-flash-lite. Envía métricas agregadas públicas
 del territorio seleccionado y valida la respuesta. Sin clave, ante fallos de
 red, cuota o respuestas inválidas, usa reglas locales. No se validó una llamada
 real a Gemini en este entorno; las pruebas del adaptador usan transporte

@@ -23,7 +23,7 @@ hoja de cálculo deben declararse columnas de texto para conservar ceros inicial
 El diagnóstico local explica cifras reales y las limitaciones del indicador.
 Gemini REST es opcional, con consentimiento por consulta y clave solo en Main.
 El usuario la configura en Preferencias; `safeStorage` la cifra en el equipo.
-Usa el modelo `gemini-3.1-flash-lite`,
+Usa el modelo estable `gemini-3.5-flash-lite`,
 salida estructurada validada, timeout y respaldo local ante falta de clave,
 red o cuota. Las pruebas cubren estas respuestas con transporte controlado;
 no se realizó una consulta real a Gemini porque no hay clave configurada.
