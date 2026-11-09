@@ -18,7 +18,7 @@ export function CoverageMap() {
     if (!host.current) return
     let instance: LibreMap
     try {
-      instance = new LibreMap({ container: host.current, style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#e6eef0' } }] },
+      instance = new LibreMap({ container: host.current, style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#f3f1e7' } }] },
         center: [-73.6, 4.8], zoom: 4.4, minZoom: 3, maxZoom: 17, attributionControl: false,
         transformRequest: () => { throw new Error('Remote map resources are disabled') } })
     } catch { setFailed(true); return }
@@ -27,9 +27,12 @@ export function CoverageMap() {
     instance.on('load', () => {
       const empty = { type: 'FeatureCollection' as const, features: [] }
       instance.addSource('territories', { type: 'geojson', data: empty })
+      instance.addSource('selected-department', { type: 'geojson', data: empty })
       instance.addSource('centers', { type: 'geojson', data: empty })
-      instance.addLayer({ id: 'coverage-fill', type: 'fill', source: 'territories', paint: { 'fill-color': ['case', ['<', ['get', 'value'], 0], '#aeb8bd', ['interpolate', ['linear'], ['get', 'value'], 0, '#c8463b', 0.5, '#e6bb5b', 0.9, '#79b991', 1, '#24654e']], 'fill-opacity': 0.8 } })
-      instance.addLayer({ id: 'borders', type: 'line', source: 'territories', paint: { 'line-color': '#3f585c', 'line-width': 0.8 } })
+      instance.addLayer({ id: 'coverage-fill', type: 'fill', source: 'territories', paint: { 'fill-color': ['case', ['<', ['get', 'value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get', 'value'], 0, '#f3c8a1', 0.5, '#f2df91', 0.9, '#a9d3a7', 1, '#4f9a72']], 'fill-opacity': 0.9 } })
+      instance.addLayer({ id: 'borders', type: 'line', source: 'territories', paint: { 'line-color': '#fffdf6', 'line-width': 1.4 } })
+      instance.addLayer({ id: 'selected-border', type: 'line', source: 'territories', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#355f4c', 'line-width': 3, 'line-opacity': 0.95 } })
+      instance.addLayer({ id: 'selected-department-border', type: 'line', source: 'selected-department', paint: { 'line-color': '#355f4c', 'line-width': 4, 'line-opacity': 0.95 } })
       instance.addLayer({ id: 'heat', type: 'heatmap', source: 'centers', filter: ['==', ['get', 'none'], true], paint: { 'heatmap-radius': 28, 'heatmap-opacity': 0.65 } })
       instance.addLayer({ id: 'center-points', type: 'circle', source: 'centers', minzoom: 7,
         paint: { 'circle-color': ['case', ['get', 'none'], '#b72d2d', '#1d6083'], 'circle-radius': 4, 'circle-stroke-width': 1, 'circle-stroke-color': '#fff' } })
@@ -58,16 +61,22 @@ export function CoverageMap() {
     if (!loaded || !instance || !view) return
     host.current?.setAttribute('data-rendered', 'false')
     ;(instance.getSource('territories') as GeoJSONSource).setData(view.polygons)
+    const departmentBoundary = maps?.departments.features.find((feature) => feature.id === selectedId)
+    ;(instance.getSource('selected-department') as GeoJSONSource).setData({
+      type: 'FeatureCollection',
+      features: departmentBoundary ? [departmentBoundary] : [],
+    })
     ;(instance.getSource('centers') as GeoJSONSource).setData(view.points)
+    instance.setFilter('selected-border', ['==', ['get', 'id'], selectedId])
     instance.setLayoutProperty('heat', 'visibility', heatmap ? 'visible' : 'none')
     const filter: FilterSpecification | null = band === 'all' ? null : band === 'unknown' ? ['<', ['get', 'value'], 0] :
       band === 'low' ? ['all', ['>=', ['get','value'], 0], ['<', ['get','value'], 0.5]] :
       band === 'medium' ? ['all', ['>=', ['get','value'], 0.5], ['<', ['get','value'], 0.9]] : ['>=', ['get','value'], 0.9]
     instance.setFilter('coverage-fill', filter)
     instance.setPaintProperty('coverage-fill', 'fill-color', layer === 'none' ?
-      ['case', ['<', ['get','value'], 0], '#aeb8bd', ['interpolate', ['linear'], ['get','value'], 0, '#e3ece7', 0.1, '#e6bb5b', 1, '#b72d2d']] :
-      ['case', ['<', ['get','value'], 0], '#aeb8bd', ['interpolate', ['linear'], ['get','value'], 0, '#c8463b', 0.5, '#e6bb5b', 0.9, '#79b991', 1, '#24654e']])
-  }, [loaded, view, heatmap, band, layer])
+      ['case', ['<', ['get','value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get','value'], 0, '#f2df91', 0.1, '#f3c8a1', 1, '#f3c8a1']] :
+      ['case', ['<', ['get','value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get','value'], 0, '#f3c8a1', 0.5, '#f2df91', 0.9, '#a9d3a7', 1, '#4f9a72']])
+  }, [loaded, view, heatmap, band, layer, maps, selectedId])
   useEffect(() => {
     if (!loaded || !map.current || !data || !maps) return
     const features = mapView(data,maps,selectedId,'4G').polygons

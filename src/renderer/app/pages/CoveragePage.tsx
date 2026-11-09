@@ -5,6 +5,7 @@ import { useCoverageStore, type LegendBand } from '@renderer/services/coverageSt
 import { searchTerritories, territoryView } from '@renderer/services/selectors'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { WorkspacePage } from './WorkspacePage'
+import { TerritoryPanel } from '@renderer/components/TerritoryPanel'
 
 const CoverageMap = lazy(() =>
   import('@renderer/components/CoverageMap').then((module) => ({ default: module.CoverageMap }))
@@ -43,9 +44,11 @@ export function CoveragePage({ title = 'map' }: { title?: 'map' | 'coverage' | '
 
   return (
     <div className="page data-page">
+      <aside className="map-explorer">
       <header className="page-header">
         <span className="eyebrow">{state.data.metadata.period} · CRC / DANE</span>
         <h1>{t(title)}</h1>
+        <p>{t('mapDescription')}</p>
       </header>
 
       {/* Modern Breadcrumb Trail */}
@@ -104,6 +107,11 @@ export function CoveragePage({ title = 'map' }: { title?: 'map' | 'coverage' | '
         </ul>
       )}
 
+      <section className="selected-territory-card">
+        <span className="selected-territory-label">{t('noSelection')}</span>
+        <TerritoryPanel />
+      </section>
+
       {/* Layer Pill Selector */}
       <fieldset className="layer-picker">
         <legend className="flex items-center gap-1.5 text-xs font-semibold text-[var(--muted)] mb-2">
@@ -120,19 +128,6 @@ export function CoveragePage({ title = 'map' }: { title?: 'map' | 'coverage' | '
           </button>
         ))}
       </fieldset>
-
-      {/* Mapbox / MapLibre GL Render Container */}
-      <Suspense
-        fallback={
-          <div className="map-wrap h-[400px] grid place-items-center">
-            <p role="status" className="text-sm text-[var(--muted)]">
-              {t('loading')}
-            </p>
-          </div>
-        }
-      >
-        <CoverageMap />
-      </Suspense>
 
       {/* Map Options Controls */}
       <div className="map-options">
@@ -178,6 +173,18 @@ export function CoveragePage({ title = 'map' }: { title?: 'map' | 'coverage' | '
           </div>
         </section>
       )}
+    </aside>
+      {/* Local DANE boundaries create a real, selectable territorial map without remote tiles. */}
+      <section className="map-canvas-panel" aria-label={t('map')}>
+        <div className="map-canvas-heading">
+          <div><span className="eyebrow">{state.data.metadata.period} · DANE MGN</span><h2>{territory.name}</h2></div>
+          <span className="map-live-indicator"><i /> {t('technology')}: {state.layer === 'none' ? t('none') : state.layer}</span>
+        </div>
+        <Suspense fallback={<div className="map-wrap map-loading-placeholder" role="status">{t('loading')}</div>}>
+          <CoverageMap />
+        </Suspense>
+        <div className="map-legend"><span><i className="legend-low" />0–50%</span><span><i className="legend-medium" />50–90%</span><span><i className="legend-high" />90–100%</span><span><i className="legend-unknown" />{t('noReport')}</span></div>
+      </section>
     </div>
   )
 }
