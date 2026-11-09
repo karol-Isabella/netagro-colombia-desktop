@@ -81,6 +81,11 @@ export function CoverageMap() {
       duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450 })
   }, [centerId, data, loaded])
   return <div className="map-wrap"><div className="coverage-map" ref={host} role="region" aria-label={t('map')} />
+    {!loaded && !failed && (
+      <div className="map-loading-overlay" aria-hidden="true">
+        <div className="map-loading-spinner" />
+      </div>
+    )}
     {failed && <p role="alert" className="map-notice">{t('mapError')}</p>}
     <span className="map-credit">{t('sourceNote')}</span></div>
 }
