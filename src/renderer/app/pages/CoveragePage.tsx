@@ -183,7 +183,7 @@ export function CoveragePage({ title = 'map' }: { title?: 'map' | 'coverage' | '
         <Suspense fallback={<div className="map-wrap map-loading-placeholder" role="status">{t('loading')}</div>}>
           <CoverageMap />
         </Suspense>
-        <div className="map-legend"><span><i className="legend-low" />0–50%</span><span><i className="legend-medium" />50–90%</span><span><i className="legend-high" />90–100%</span><span><i className="legend-unknown" />{t('noReport')}</span><span className="contour-legend"><i />{t('contourLegend')}</span></div>
+        <div className="map-legend"><span><i className="legend-low" />0–50%</span><span><i className="legend-medium" />50–90%</span><span><i className="legend-high" />90–100%</span><span><i className="legend-unknown" />{t('noReport')}</span><span><i className="legend-center-covered" />{t('coveredCenter')}</span><span><i className="legend-center-uncovered" />{t('uncoveredCenter')}</span><span className="contour-legend"><i />{t('contourLegend')}</span></div>
       </section>
     </div>
   )

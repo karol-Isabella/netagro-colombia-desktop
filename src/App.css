@@ -1880,6 +1880,8 @@
 .map-legend span { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 650; color: #59675d; }
 .map-legend i { width: 9px; height: 9px; border-radius: 3px; }
 .map-legend .contour-legend i { width: 13px; height: 0; border-top: 1.5px solid #637b67; border-radius: 0; }
+.map-legend .legend-center-covered, .map-legend .legend-center-uncovered { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 1.5px #fff; }
+.map-legend .legend-center-covered { background: #1d6083; }.map-legend .legend-center-uncovered { background: #b72d2d; }
 .legend-low { background: #f3c8a1; }.legend-medium { background: #f2df91; }.legend-high { background: #a9d3a7; }.legend-unknown { background: #d8ddd2; }
 .map-loading-placeholder { display: grid; place-items: center; color: var(--muted); }
 @media (max-width: 1050px) and (min-width: 761px) {
