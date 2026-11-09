@@ -7,7 +7,7 @@ import { credentialsSchema } from '@shared/contracts'
 
 const scrypt = promisify(scryptCallback)
 const usersSchema = z.object({ version: z.literal(1), users: z.array(z.object({
-  username: z.string().regex(/^[a-z0-9._-]{1,20}$/), salt: z.string().regex(/^[a-f0-9]{32}$/), hash: z.string().regex(/^[a-f0-9]{128}$/),
+  username: z.string().regex(/^[a-z0-9._-]{1,50}$/), salt: z.string().regex(/^[a-f0-9]{32}$/), hash: z.string().regex(/^[a-f0-9]{128}$/),
 }).strict()).max(100) }).strict()
 export class AuthService {
   private current: string | null = null

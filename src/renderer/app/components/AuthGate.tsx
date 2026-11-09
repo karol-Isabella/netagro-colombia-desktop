@@ -66,8 +66,8 @@ function AuthForm() {
   if (touched.username || attemptedSubmit) {
     if (!username.trim()) {
       usernameError = isEs ? 'El nombre de usuario es obligatorio' : 'Username is required'
-    } else if (username.length > 20) {
-      usernameError = isEs ? 'Máximo 20 caracteres permitidos' : 'Maximum 20 characters allowed'
+    } else if (username.length > 50) {
+      usernameError = isEs ? 'Máximo 50 caracteres permitidos' : 'Maximum 50 characters allowed'
     } else if (!/^[a-zA-Z0-9._-]+$/.test(username)) {
       usernameError = isEs ? 'Solo se permiten letras y números' : 'Only letters and numbers are allowed'
     }
@@ -89,7 +89,7 @@ function AuthForm() {
     event.preventDefault()
     setAttemptedSubmit(true)
 
-    const validUser = username.trim().length >= 1 && username.length <= 20 && /^[a-zA-Z0-9._-]+$/.test(username)
+    const validUser = username.trim().length >= 1 && username.length <= 50 && /^[a-zA-Z0-9._-]+$/.test(username)
     const validPass = password.length >= 6 && password.length <= 20
 
     if (!validUser || !validPass) {
@@ -144,14 +144,14 @@ function AuthForm() {
                 {isEs ? 'Nombre de usuario' : 'Username'}
               </label>
               <span className="text-[11px] text-[var(--muted)] font-normal">
-                {isEs ? 'Hasta 20 caracteres' : 'Up to 20 characters'}
+                {isEs ? 'Hasta 50 caracteres' : 'Up to 50 characters'}
               </span>
             </div>
             <input
               id="username"
               autoComplete="username"
               required
-              maxLength={20}
+              maxLength={50}
               pattern="[a-zA-Z0-9._\-]+"
               placeholder={isEs ? 'Ej. usuario2026' : 'e.g. user2026'}
               value={username}
