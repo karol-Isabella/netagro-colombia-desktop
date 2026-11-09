@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
-import { Download, Table, Filter, ChevronDown } from 'lucide-react'
+import { Download, Table, Filter, ChevronDown, TrendingUp } from 'lucide-react'
 import { technologies, layerValue, type Layer } from '@shared/coverage'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { rankings, percent } from '@renderer/services/selectors'
 import { useExport } from '@renderer/services/useExport'
 import { usePreferences } from '@renderer/preferences/usePreferences'
 import { useTranslation } from '@renderer/i18n/useTranslation'
+
+/** Returns a semantic coverage tier dot color */
+function coverageDot(value: number | null | undefined): string {
+  if (value === undefined || value === null || value < 0) return 'coverage-dot unknown'
+  if (value >= 0.9) return 'coverage-dot high'
+  if (value >= 0.5) return 'coverage-dot medium'
+  return 'coverage-dot low'
+}
 
 export function ReportsPage() {
   const { data, status, load, selectedId, select, layer, setLayer } = useCoverageStore()
@@ -124,7 +132,10 @@ export function ReportsPage() {
       <div className="table-wrap">
         <table>
           <caption>
-            {t('ranking')} · {data.metadata.period}
+            <span className="flex items-center gap-2">
+              <TrendingUp size={14} className="text-[var(--accent)]" aria-hidden="true" />
+              {t('ranking')} · {data.metadata.period}
+            </span>
           </caption>
           <thead>
             <tr>
@@ -140,8 +151,11 @@ export function ReportsPage() {
                 <td className="font-mono text-xs text-[var(--muted)]">{row.id}</td>
                 <td className="font-semibold text-[var(--text)]">{row.name}</td>
                 <td>
-                  <span className="font-bold text-[var(--accent)]">
-                    {percent(layerValue(row, layer), locale)}
+                  <span className="flex items-center gap-2">
+                    <span className={coverageDot(layerValue(row, layer))} aria-hidden="true" />
+                    <span className="font-bold text-[var(--accent)]">
+                      {percent(layerValue(row, layer), locale)}
+                    </span>
                   </span>
                 </td>
                 <td>
