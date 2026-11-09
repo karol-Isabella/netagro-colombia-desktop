@@ -1,10 +1,26 @@
-import { MapPin, Signal, Radio, Building2 } from 'lucide-react'
+import { MapPin, Signal, Radio, Building2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { operators, layerValue } from '@shared/coverage'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { percent, territoryView } from '@renderer/services/selectors'
 import { usePreferences } from '@renderer/preferences/usePreferences'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { AnalysisPanel } from './AnalysisPanel'
+
+/** Returns semantic color class based on coverage value */
+function coverageColorClass(val: number | null | undefined): string {
+  if (val === undefined || val === null || val < 0) return 'text-[var(--muted)]'
+  if (val >= 0.9) return 'text-emerald-500 dark:text-emerald-400'
+  if (val >= 0.5) return 'text-amber-500'
+  return 'text-rose-500'
+}
+
+/** Returns a trend icon component based on coverage value */
+function TrendIcon({ val }: { val: number | null | undefined }) {
+  if (val === undefined || val === null || val < 0) return <Minus size={16} className="text-[var(--muted)]" />
+  if (val >= 0.9) return <TrendingUp size={16} className="text-emerald-500" />
+  if (val >= 0.5) return <Minus size={16} className="text-amber-500" />
+  return <TrendingDown size={16} className="text-rose-500" />
+}
 
 export function TerritoryPanel() {
   const { data, selectedId, layer, centerId, selectCenter } = useCoverageStore()
@@ -37,14 +53,17 @@ export function TerritoryPanel() {
       <h2>{territory.name}</h2>
 
       {/* Hero Metric */}
-      <div className="my-4 p-4 rounded-2xl bg-[var(--canvas)] border border-[var(--line)]">
+      <div className="my-4 p-4 rounded-2xl bg-[var(--canvas)] border border-[var(--line)] transition-all duration-300">
         <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider flex items-center gap-1.5">
           <Signal size={13} className="text-[var(--accent)]" />
           {t(layer === 'none' ? 'layerNone' : 'bestCoverage')}
         </span>
-        <strong className="coverage-number">
-          {percent(layerValue(territory, layer), locale)}
-        </strong>
+        <div className="flex items-end gap-2 mt-1">
+          <strong className={`coverage-number ${coverageColorClass(layerValue(territory, layer))}`}>
+            {percent(layerValue(territory, layer), locale)}
+          </strong>
+          <TrendIcon val={layerValue(territory, layer)} />
+        </div>
       </div>
 
       {/* Centers & Uncovered Summary */}
