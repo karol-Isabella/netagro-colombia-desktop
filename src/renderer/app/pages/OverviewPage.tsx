@@ -89,13 +89,23 @@ export function OverviewPage() {
         <p className="small-copy mt-0">{t('methodNote')}</p>
 
         <div className="technology-bars">
-          {technologies.map((tech) => (
-            <div key={tech}>
-              <span className="font-semibold text-xs text-[var(--muted)] w-10">{tech}</span>
-              <progress max={1} value={country.coverage[tech] ?? 0} aria-label={tech} />
-              <strong>{percent(country.coverage[tech], locale)}</strong>
-            </div>
-          ))}
+          {technologies.map((tech) => {
+            const val = country.coverage[tech] ?? 0
+            const colorClass =
+              val >= 0.9 ? 'bar-high' : val >= 0.5 ? 'bar-medium' : 'bar-low'
+            return (
+              <div key={tech}>
+                <span className="font-semibold text-xs text-[var(--muted)] w-10">{tech}</span>
+                <progress
+                  max={1}
+                  value={val}
+                  aria-label={tech}
+                  className={colorClass}
+                />
+                <strong>{percent(country.coverage[tech], locale)}</strong>
+              </div>
+            )
+          })}
         </div>
 
         <button
