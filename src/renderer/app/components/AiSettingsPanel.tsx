@@ -80,6 +80,7 @@ export function AiSettingsPanel() {
       </form>
       {configured && <button type="button" className="ai-remove-key" onClick={() => void remove()} disabled={busy}><Trash2 size={14} />{t('aiRemoveKey')}</button>}
       <p className="small-copy ai-key-privacy">{t('aiKeyPrivacy')}</p>
+      <p className="small-copy ai-usage-note">{t('aiUsageAndLimits')}</p>
       {message && <p className="ai-settings-message" role="status">{message}</p>}
     </section>
   )

@@ -25,13 +25,13 @@ export default {
       },
       fontFamily: {
         sans: [
+          '"Segoe UI Variable"',
+          'Inter',
+          '"Segoe UI"',
+          'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
-          '"SF Pro Display"',
-          '"SF Pro Text"',
-          '"Segoe UI"',
           'Roboto',
-          'Helvetica',
           'Arial',
           'sans-serif',
         ],

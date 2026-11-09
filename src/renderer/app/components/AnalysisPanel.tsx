@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Sparkles, Brain, CheckCircle2, Lightbulb, AlertTriangle } from 'lucide-react'
+import { Sparkles, Brain, CheckCircle2, Lightbulb, AlertTriangle, ChevronDown } from 'lucide-react'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { usePreferences } from '@renderer/preferences/usePreferences'
 import { useTranslation } from '@renderer/i18n/useTranslation'
@@ -26,23 +26,26 @@ export function AnalysisPanel() {
 
   return (
     <section className="analysis-panel">
-      <div className="flex items-center gap-2 mb-2">
-        <Sparkles size={16} className="text-[var(--accent)]" aria-hidden="true" />
-        <h2 className="font-bold text-sm text-[var(--text)]">{t('analysis')}</h2>
+      <div className="analysis-heading">
+        <span className="analysis-heading-icon"><Sparkles size={15} aria-hidden="true" /></span>
+        <h2>{t('analysis')}</h2>
       </div>
 
-      <label className="small-copy flex items-center gap-2 cursor-pointer mt-1">
+      <label className="analysis-mode-control">
         <input
           type="checkbox"
-          className="rounded accent-[var(--accent)] cursor-pointer"
+          className="accent-[var(--accent)] cursor-pointer"
           checked={online}
           onChange={(e) => setOnline(e.target.checked)}
         />
-        <span>{t('onlineAnalysis')}</span>
+        <span className="analysis-mode-copy">
+          <strong>{t('onlineAnalysis')}</strong>
+          <small>{online ? 'Gemini 3.5 Flash-Lite' : t('rules')}</small>
+        </span>
       </label>
 
       {online && (
-        <p className="small-copy text-amber-600 dark:text-amber-400 font-medium">
+        <p className="analysis-online-notice">
           {t('onlineNotice')}
         </p>
       )}
@@ -87,47 +90,46 @@ export function AnalysisPanel() {
       )}
 
       {result && (
-        <div className="analysis-result mt-4" aria-live="polite">
-          <div className="flex items-center justify-between mb-2 pb-2 border-b border-[var(--line)]">
-            <span className="eyebrow m-0 text-[10px]">
-              {t(result.provider)}
-              {result.model ? ' · ' + result.model : ''}
-            </span>
+        <div className="analysis-result" aria-live="polite">
+          <div className="analysis-result-header">
+            <span className={`analysis-provider-dot ${result.provider === 'gemini' ? 'is-online' : ''}`} />
+            <strong>{result.provider === 'gemini' ? 'Gemini' : t(result.provider)}</strong>
+            {result.model && <span className="analysis-model-name">{result.model}</span>}
           </div>
 
-          <p className="text-sm font-medium text-[var(--text)] leading-relaxed mb-3">
+          <p className="analysis-summary">
             {result.summary}
           </p>
 
-          <div className="mt-3">
-            <h3 className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-wider mb-2">
-              <CheckCircle2 size={13} />
-              <span>{t('findings')}</span>
-            </h3>
-            <ul className="space-y-1.5 text-xs text-[var(--muted)]">
+          <details className="analysis-disclosure">
+            <summary>
+              <span><CheckCircle2 size={14} />{t('findings')}</span>
+              <span className="analysis-disclosure-meta">{result.findings.length}<ChevronDown size={14} /></span>
+            </summary>
+            <ul className="analysis-points">
               {result.findings.map((text, index) => (
                 <li key={index} className="flex items-start gap-1.5">
-                  <span className="text-[var(--accent)] font-bold">•</span>
+                  <span className="analysis-point-mark" aria-hidden="true">•</span>
                   <span>{text}</span>
                 </li>
               ))}
             </ul>
-          </div>
+          </details>
 
-          <div className="mt-4">
-            <h3 className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2">
-              <Lightbulb size={13} />
-              <span>{t('recommendations')}</span>
-            </h3>
-            <ul className="space-y-1.5 text-xs text-[var(--muted)]">
+          <details className="analysis-disclosure recommendations-disclosure">
+            <summary>
+              <span><Lightbulb size={14} />{t('recommendations')}</span>
+              <span className="analysis-disclosure-meta">{result.recommendations.length}<ChevronDown size={14} /></span>
+            </summary>
+            <ul className="analysis-points">
               {result.recommendations.map((text, index) => (
                 <li key={index} className="flex items-start gap-1.5">
-                  <span className="text-amber-500 font-bold">•</span>
+                  <span className="analysis-point-mark" aria-hidden="true">•</span>
                   <span>{text}</span>
                 </li>
               ))}
             </ul>
-          </div>
+          </details>
 
           {result.fallbackReason && (
             <p className="small-copy text-[10.5px] italic mt-3 pt-2 border-t border-[var(--line)]">
