@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { datasetSchema, mapsSchema } from './dataSchema'
 import { analysisSchema } from './analysis'
 
-export const errorCodeSchema = z.enum(['AUTH_REQUIRED', 'AUTH_FAILED', 'USER_EXISTS', 'RATE_LIMIT', 'STORAGE_ERROR', 'DATA_UNAVAILABLE', 'INVALID_INPUT', 'EXPORT_FAILED', 'INTERNAL'])
+export const errorCodeSchema = z.enum(['AUTH_REQUIRED', 'AUTH_FAILED', 'USER_EXISTS', 'RATE_LIMIT', 'STORAGE_ERROR', 'DATA_UNAVAILABLE', 'INVALID_INPUT', 'EXPORT_FAILED', 'SECURE_STORAGE_UNAVAILABLE', 'AI_KEY_STORAGE_ERROR', 'INTERNAL'])
 export type ErrorCode = z.infer<typeof errorCodeSchema>
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ErrorCode }
 export const resultSchema = <T extends z.ZodType>(schema: T) => z.discriminatedUnion('ok', [
@@ -25,6 +25,7 @@ export const credentialsSchema = z.object({
   password: z.string().min(6).max(20),
 }).strict()
 const sessionSchema = z.object({ username: z.string().nullable(), hasAccounts: z.boolean() }).strict()
+const aiKeyStatusSchema = z.object({ configured: z.boolean(), secureStorageAvailable: z.boolean(), storageError: z.boolean() }).strict()
 
 export const appInfoSchema = z.object({
   name: z.literal('NetAgro Colombia'),
@@ -43,6 +44,9 @@ export const contracts = {
   'auth:register': { request: credentialsSchema, response: resultSchema(sessionSchema) },
   'auth:login': { request: credentialsSchema, response: resultSchema(sessionSchema) },
   'auth:logout': { request: z.undefined(), response: resultSchema(z.null()) },
+  'ai:key-status': { request: z.undefined(), response: resultSchema(aiKeyStatusSchema) },
+  'ai:key-save': { request: z.object({ apiKey: z.string().trim().min(20).max(512) }).strict(), response: resultSchema(z.null()) },
+  'ai:key-remove': { request: z.undefined(), response: resultSchema(z.null()) },
   'export:csv': { request: z.object({ territoryId: z.string().regex(/^(CO|\d{2}|\d{5})$/), layer: z.enum(['2G','3G','4G','5G','none']), kind: z.enum(['rankings','centers']) }).strict(), response: resultSchema(z.object({ saved: z.boolean() }).strict()) },
   'analysis:run': { request: z.object({ territoryId: z.string().regex(/^(CO|\d{2}|\d{5})$/), layer: z.enum(['2G','3G','4G','5G','none']), locale: localeSchema, online: z.boolean() }).strict(), response: resultSchema(analysisSchema) },
 } as const
@@ -58,6 +62,9 @@ export interface DesktopApi {
   register: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:register']['response']>>
   login: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:login']['response']>>
   logout: () => Promise<z.infer<typeof contracts['auth:logout']['response']>>
+  aiKeyStatus: () => Promise<z.infer<typeof contracts['ai:key-status']['response']>>
+  saveAiKey: (input: z.infer<typeof contracts['ai:key-save']['request']>) => Promise<z.infer<typeof contracts['ai:key-save']['response']>>
+  removeAiKey: () => Promise<z.infer<typeof contracts['ai:key-remove']['response']>>
   exportCsv: (input: z.infer<typeof contracts['export:csv']['request']>) => Promise<z.infer<typeof contracts['export:csv']['response']>>
   analyze: (input: z.infer<typeof contracts['analysis:run']['request']>) => Promise<z.infer<typeof contracts['analysis:run']['response']>>
 }

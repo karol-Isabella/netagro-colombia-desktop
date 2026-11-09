@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Sparkles, Brain, CheckCircle2, Lightbulb, AlertTriangle } from 'lucide-react'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { usePreferences } from '@renderer/preferences/usePreferences'
@@ -10,7 +11,16 @@ export function AnalysisPanel() {
   const { locale } = usePreferences()
   const t = useTranslation()
   const [online, setOnline] = useState(false)
+  const [hasAiKey, setHasAiKey] = useState<boolean | null>(null)
   const { result, busy, failed, run } = useAnalysis(selectedId, layer, locale)
+
+  useEffect(() => {
+    let mounted = true
+    void window.netAgro?.aiKeyStatus?.().then((response) => {
+      if (mounted && response.ok) setHasAiKey(response.data.configured)
+    }).catch(() => undefined)
+    return () => { mounted = false }
+  }, [])
 
   if (!data) return null
 
@@ -34,6 +44,12 @@ export function AnalysisPanel() {
       {online && (
         <p className="small-copy text-amber-600 dark:text-amber-400 font-medium">
           {t('onlineNotice')}
+        </p>
+      )}
+
+      {online && hasAiKey === false && (
+        <p className="analysis-key-warning" role="status">
+          {t('aiKeyMissing')} · <Link className="text-link" to="/settings">{t('settings')}</Link>
         </p>
       )}
 

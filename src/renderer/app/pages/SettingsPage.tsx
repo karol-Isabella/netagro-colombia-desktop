@@ -2,6 +2,7 @@ import { Info } from 'lucide-react'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { PreferencesPanel } from '@renderer/components/PreferencesPanel'
 import { useAppInfo } from '@renderer/services/useAppInfo'
+import { AiSettingsPanel } from '@renderer/components/AiSettingsPanel'
 
 export function SettingsPage() {
   const t = useTranslation()
@@ -19,6 +20,8 @@ export function SettingsPage() {
       <div className="settings-card">
         <PreferencesPanel />
       </div>
+
+      <AiSettingsPanel />
 
       {/* About Application Metadata */}
       <section className="settings-card about-card">

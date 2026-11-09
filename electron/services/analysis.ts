@@ -38,7 +38,7 @@ export class AnalysisService {
     if (!input.online) return local('offline')
     const key = this.apiKey()
     if (!key) return local('not-configured')
-    for (const model of ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']) {
+    for (const model of ['gemini-3.1-flash-lite']) {
       let response: Response
       try {
         response = await this.request(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {

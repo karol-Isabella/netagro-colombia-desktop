@@ -18,13 +18,13 @@ it('falls back immediately for quota and network failures', async () => {
   const network = vi.fn().mockRejectedValue(new Error('offline'))
   expect((await new AnalysisService(repository, () => 'test-key', network).analyze(input)).fallbackReason).toBe('network')
 })
-it('tries the backup model and validates its structured response', async () => {
+it('uses the published Flash-Lite model and validates its structured response', async () => {
   const content = { summary: 'Official diagnosis', findings: ['No reported area'], recommendations: ['Verify data'] }
-  const request = vi.fn().mockResolvedValueOnce(new Response('', { status: 503 }))
-    .mockResolvedValueOnce(Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(content) }] } }] }))
+  const request = vi.fn().mockResolvedValue(Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(content) }] } }] }))
   const result = await new AnalysisService(repository, () => 'test-key', request).analyze(input)
   expect(result.provider).toBe('gemini')
   expect(result.model).toBe('gemini-3.1-flash-lite')
+  expect(request).toHaveBeenCalledTimes(1)
   expect(request.mock.calls[0][1].headers['x-goog-api-key']).toBe('test-key')
   expect(request.mock.calls[0][1].body).not.toContain('test-key')
 })

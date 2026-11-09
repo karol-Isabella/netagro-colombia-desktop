@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, dialog } from 'electron'
+import { app, BrowserWindow, session, dialog, safeStorage } from 'electron'
 import { writeFile } from 'node:fs/promises'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import path from 'node:path'
@@ -9,6 +9,7 @@ import { AnalysisService } from '@main/services/analysis'
 import { AuthService } from '@main/services/auth'
 import { rankingCsv, centersCsv } from '@main/services/export'
 import { CoverageRepository } from '@main/services/repository'
+import { AiKeyStore } from '@main/services/aiKeyStore'
 import { contentSecurityPolicy, isTrustedDocument } from '@main/security'
 
 const directory = path.dirname(fileURLToPath(import.meta.url))
@@ -64,7 +65,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-void app.whenReady().then(() => {
+void app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false))
   session.defaultSession.setPermissionCheckHandler(() => false)
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -80,12 +81,17 @@ void app.whenReady().then(() => {
     app.isPackaged ? path.join(process.resourcesPath, 'data') : path.join(directory, '../data/processed'),
   )
   const auth = new AuthService(app.getPath('userData'))
+  const aiKeys = new AiKeyStore(app.getPath('userData'), safeStorage, process.platform)
+  await aiKeys.initialize()
   registerDataIpc(() => window, trustedDocument, repository, () => auth.requireSession())
   const route = createRouteRegistrar(() => window, trustedDocument, () => auth.requireSession())
   route('auth:status', contracts['auth:status'], () => auth.status(), false)
   route('auth:register', contracts['auth:register'], input => auth.register(input), false)
   route('auth:login', contracts['auth:login'], input => auth.login(input), false)
   route('auth:logout', contracts['auth:logout'], () => { auth.logout(); return null }, false)
+  route('ai:key-status', contracts['ai:key-status'], () => aiKeys.status())
+  route('ai:key-save', contracts['ai:key-save'], async input => { await aiKeys.save(input.apiKey); return null })
+  route('ai:key-remove', contracts['ai:key-remove'], async () => { await aiKeys.clear(); return null })
   route('export:csv', contracts['export:csv'], async input => {
     if (!window) throw new Error('EXPORT_FAILED')
     const { data } = await repository.load()
@@ -99,7 +105,7 @@ void app.whenReady().then(() => {
     try { await writeFile(destination.filePath, csv, 'utf8') } catch { throw new Error('EXPORT_FAILED') }
     return { saved: true }
   })
-  const analysis = new AnalysisService(repository, () => process.env.MAIN_VITE_GEMINI_API_KEY)
+  const analysis = new AnalysisService(repository, () => aiKeys.getKey())
   let analyzing = false
   route('analysis:run', contracts['analysis:run'], async input => {
     if (analyzing) throw new Error('RATE_LIMIT')
