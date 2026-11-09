@@ -42,9 +42,26 @@ export function AnalysisPanel() {
         disabled={busy}
         onClick={() => void run(online)}
       >
-        <Brain size={16} aria-hidden="true" />
-        <span>{t(busy ? 'analyzing' : 'analyze')}</span>
+        {busy ? (
+          <>
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" aria-hidden="true" />
+            <span>{t('analyzing')}</span>
+          </>
+        ) : (
+          <>
+            <Brain size={16} aria-hidden="true" />
+            <span>{t('analyze')}</span>
+          </>
+        )}
       </button>
+
+      {busy && (
+        <div className="analysis-skeleton mt-4" aria-hidden="true">
+          <div className="skeleton-line w-3/4" />
+          <div className="skeleton-line w-full" />
+          <div className="skeleton-line w-5/6" />
+        </div>
+      )}
 
       {failed && (
         <div className="flex items-center gap-2 text-xs text-rose-500 font-semibold mt-3" role="alert">
