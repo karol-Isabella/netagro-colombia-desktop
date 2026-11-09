@@ -20,6 +20,13 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
+      {/* Global Aurora Background (subtle, behind everything) */}
+      <div className="dashboard-aurora" aria-hidden="true">
+        <div className="dashboard-aurora-orb-1" />
+        <div className="dashboard-aurora-orb-2" />
+        <div className="dashboard-aurora-orb-3" />
+      </div>
+
       <a className="skip-link" href="#main-content">
         {t('skipContent')}
       </a>
@@ -57,6 +64,7 @@ export function AppShell() {
         <div className="workspace-note">
           <HardDrive size={16} aria-hidden="true" className="shrink-0 text-[var(--accent)]" />
           <span>{t('localWorkspace')}</span>
+          <span className="sidebar-version-badge">local</span>
         </div>
 
         {/* User Account / Session Pill */}
