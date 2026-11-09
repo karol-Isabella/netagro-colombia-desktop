@@ -96,6 +96,8 @@ async function run() {
     await evaluate('document.querySelector(\'a[href="#/map"]\').click()')
     await wait('document.querySelector(".coverage-map")?.dataset.rendered==="true"')
     console.log('Packaged map ready')
+    await wait('Number(document.querySelector(".coverage-map")?.dataset.reliefFeatures)>0')
+    console.log('Packaged DANE contour layer ready')
     await evaluate('document.querySelector(".map-toolbar .action-button").click()')
     await wait('document.querySelector(".territory-panel h2")?.textContent==="NARIÑO" && document.querySelector(".coverage-map")?.dataset.rendered==="true"')
     const analysis=await evaluate('window.netAgro.analyze({territoryId:"52",layer:"4G",locale:"es",online:false})')
@@ -117,7 +119,7 @@ async function run() {
     assert.equal((await evaluate('window.netAgro.getMaps()')).error,'AUTH_REQUIRED')
     assert.deepEqual(errors,[])
     assert.deepEqual(network,[])
-    const result={passed:true,executable,version:info.version,period:actual.period,centers:actual.centers,checks:['packaged ASAR startup','bundled official data integrity','session isolation','local registration','offline MapLibre worker','Narino navigation','municipality and breadcrumbs','accent-insensitive territory search','offline diagnosis','logout blocks data','no renderer exceptions','no HTTP requests from renderer']}
+    const result={passed:true,executable,version:info.version,period:actual.period,centers:actual.centers,checks:['packaged ASAR startup','bundled official data integrity','session isolation','local registration','offline MapLibre worker','DANE contour overlay','Narino navigation','municipality and breadcrumbs','accent-insensitive territory search','offline diagnosis','logout blocks data','no renderer exceptions','no HTTP requests from renderer']}
     writeFileSync(path.join(output,'packaged-smoke.json'),JSON.stringify(result,null,2))
     console.log(JSON.stringify(result,null,2))
   } finally {

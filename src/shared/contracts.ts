@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { datasetSchema, mapsSchema } from './dataSchema'
+import { datasetSchema, mapsSchema, reliefSchema } from './dataSchema'
 import { analysisSchema } from './analysis'
 
 export const errorCodeSchema = z.enum(['AUTH_REQUIRED', 'AUTH_FAILED', 'USER_EXISTS', 'RATE_LIMIT', 'STORAGE_ERROR', 'DATA_UNAVAILABLE', 'INVALID_INPUT', 'EXPORT_FAILED', 'SECURE_STORAGE_UNAVAILABLE', 'AI_KEY_STORAGE_ERROR', 'INTERNAL'])
@@ -40,6 +40,7 @@ export const contracts = {
   },
   'data:load': { request: z.undefined(), response: resultSchema(datasetSchema) },
   'data:maps': { request: z.undefined(), response: resultSchema(mapsSchema) },
+  'data:relief': { request: z.undefined(), response: resultSchema(reliefSchema) },
   'auth:status': { request: z.undefined(), response: resultSchema(sessionSchema) },
   'auth:register': { request: credentialsSchema, response: resultSchema(sessionSchema) },
   'auth:login': { request: credentialsSchema, response: resultSchema(sessionSchema) },
@@ -58,6 +59,7 @@ export interface DesktopApi {
   getAppInfo: () => Promise<AppInfo>
   getCoverage: () => Promise<z.infer<typeof contracts['data:load']['response']>>
   getMaps: () => Promise<z.infer<typeof contracts['data:maps']['response']>>
+  getRelief: () => Promise<z.infer<typeof contracts['data:relief']['response']>>
   authStatus: () => Promise<z.infer<typeof contracts['auth:status']['response']>>
   register: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:register']['response']>>
   login: (input: z.infer<typeof credentialsSchema>) => Promise<z.infer<typeof contracts['auth:login']['response']>>

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import * as shapefile from 'shapefile'
 import { simplify } from '@turf/turf'
 import { aggregateTerritory, normalizeCode, normalizeName, rankTerritories } from '../../src/shared/coverage'
-import { datasetSchema, collectionSchema, type MapCollection } from '../../src/shared/dataSchema'
+import { datasetSchema, collectionSchema, reliefSchema, type MapCollection } from '../../src/shared/dataSchema'
 import { processCoverage } from './csv'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -16,6 +16,7 @@ const inputs = {
   departments: path.join(cartography, 'ADMINISTRATIVO/MGN_ADM_DPTO_POLITICO'),
   municipalities: path.join(cartography, 'ADMINISTRATIVO/MGN_ADM_MPIO_GRAFICO'),
   blocks: path.join(cartography, 'URBANO/MGN_URB_MANZANA'),
+  contours: path.join(cartography, 'RURAL/CBD_RUR_HIPSO_LINEA'),
 }
 async function hash(file: string): Promise<string> {
   const value = createHash('sha256')
@@ -55,12 +56,36 @@ async function blockCoordinates() {
   }
   return new Map([...sums].map(([id,s]) => [id, [s.x / s.area, s.y / s.area] as [number,number]]))
 }
+async function relief() {
+  const projection = await readFile(inputs.contours + '.prj', 'utf8')
+  if (!projection.includes('GCS_WGS_1984')) throw new Error(`Unsupported contour projection: ${inputs.contours}`)
+  const source = await shapefile.open(inputs.contours + '.shp', inputs.contours + '.dbf', { encoding: 'utf-8' })
+  const features: Array<{ type: 'Feature'; id: string; geometry: { type: 'LineString' | 'MultiLineString'; coordinates: number[][] | number[][][] }; properties: { id: string; elevation: number; major: boolean } }> = []
+  let sequence = 0
+  while (true) {
+    const item = await source.read()
+    if (item.done) break
+    const properties = item.value.properties as Record<string, unknown>
+    const elevation = Number(properties.RHPL_CTEXT)
+    if (String(properties.RHPL_CSMBL) !== '15' || !Number.isFinite(elevation) || elevation % 250 !== 0) continue
+    const simplified = simplify(item.value, { tolerance: 0.0005, highQuality: true, mutate: true })
+    if (simplified.geometry.type !== 'LineString' && simplified.geometry.type !== 'MultiLineString') continue
+    const id = `contour-${sequence++}`
+    features.push({
+      type: 'Feature', id, geometry: simplified.geometry,
+      properties: { id, elevation, major: elevation % 1000 === 0 },
+    })
+  }
+  return reliefSchema.parse({ type: 'FeatureCollection', features })
+}
 console.log('Reading official coverage CSV (streaming, latest quarter)...')
 const result = await processCoverage(inputs.csv)
 console.log(`Selected ${result.period}: ${result.centers.length} centers. Reading DANE 2024...`)
 const departments = await boundaries(inputs.departments, 'department')
 const municipalities = await boundaries(inputs.municipalities, 'municipality')
 const coordinates = await blockCoordinates()
+console.log('Generalizing DANE rural contour lines (250 m interval)...')
+const contours = await relief()
 for (const c of result.centers) c.coordinates = coordinates.get(c.id) ?? null
 const municipalIds = new Set(municipalities.features.map(f => f.id))
 const unmatched = result.centers.filter(c => !municipalIds.has(c.municipalityId))
@@ -74,7 +99,7 @@ const located = result.centers.filter(c => c.coordinates !== null)
 const centers: MapCollection = { type: 'FeatureCollection', features: located.map(c => ({ type: 'Feature', id: c.id,
   geometry: { type: 'Point', coordinates: c.coordinates! }, properties: { id: c.id, name: c.name, parentId: c.municipalityId } })) }
 const sourceHashes: Record<string, string> = {}
-for (const file of [inputs.csv, inputs.departments+'.shp', inputs.departments+'.dbf', inputs.municipalities+'.shp', inputs.municipalities+'.dbf', inputs.blocks+'.dbf']) {
+for (const file of [inputs.csv, inputs.departments+'.shp', inputs.departments+'.dbf', inputs.municipalities+'.shp', inputs.municipalities+'.dbf', inputs.blocks+'.dbf', inputs.contours+'.shp', inputs.contours+'.dbf']) {
   sourceHashes[path.relative(root, file).replaceAll('\\', '/')] = await hash(file)
 }
 const metadata = {
@@ -83,13 +108,13 @@ const metadata = {
   centerCount: result.centers.length, locatedCenters: located.length, explicitNoneCount: result.centers.filter(c => c.explicitNone).length,
   sourceHashes, pointMethod: 'DANE block area-weighted coordinates',
   warnings: [...result.warnings, `${result.centers.length - located.length} centers have no matching block coordinates; omitted from point map, retained in metrics.`],
-  methodology: 'Latest quarter only. Signal-level areas summed separately per operator and technology, capped by center area; best operator chosen per center. Territory coverage is area-weighted over centers reporting each technology. Missing reports are null, not zero. Ninguna and zero coverage across all reported technologies identify uncovered centers. None layer is the area share of fully uncovered centers, not exact uncovered surface. Point locations are approximate block-area-weighted coordinates, not surveyed center centroids. Areas are in km² as supplied by CRC, not population or municipal land coverage.',
+  methodology: 'Latest quarter only. Signal-level areas summed separately per operator and technology, capped by center area; best operator chosen per center. Territory coverage is area-weighted over centers reporting each technology. Missing reports are null, not zero. Ninguna and zero coverage across all reported technologies identify uncovered centers. None layer is the area share of fully uncovered centers, not exact uncovered surface. Point locations are approximate block-area-weighted coordinates, not surveyed center centroids. Areas are in km² as supplied by CRC, not population or municipal land coverage. Relief uses DANE rural hypsometric contour lines simplified at a 250 m elevation interval; the source attribute vintage is 1993.',
 }
 const dataset = datasetSchema.parse({ metadata, territories, centers: result.centers })
 const output = path.join(root, 'data/processed')
 await mkdir(output, { recursive: true })
 const files: Record<string, unknown> = { 'coverage.json': dataset, 'departments.geojson': departments, 'municipalities.geojson': municipalities,
-  'centers.geojson': centers, 'rankings.json': rankTerritories(territories.filter(t => t.level === 'municipality'), '4G'), 'metadata.json': metadata }
+  'centers.geojson': centers, 'relief.geojson': contours, 'rankings.json': rankTerritories(territories.filter(t => t.level === 'municipality'), '4G'), 'metadata.json': metadata }
 for (const [name, value] of Object.entries(files)) {
   const target = path.join(output, name), temporary = target + '.tmp'
   await writeFile(temporary, JSON.stringify(value))

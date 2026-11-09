@@ -25,6 +25,7 @@
         "departments.geojson",
         "municipalities.geojson",
         "centers.geojson",
+        "relief.geojson",
         "rankings.json",
         "metadata.json",
         "manifest.json"

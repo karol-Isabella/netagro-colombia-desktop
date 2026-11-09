@@ -22,8 +22,8 @@ Si data/processed ya contiene una generación válida, basta con pnpm data:verif
 La generación actual selecciona 2025Q4: 8.161 centros, 241 sin cobertura,
 33 departamentos/distrito y 1.121 unidades municipales.
 
-Crea una cuenta local al abrir la app (usuario de 3–40 caracteres y contraseña
-de 10–128). Las cuentas quedan en userData/accounts.json, con sal y hash scrypt;
+Crea una cuenta local al abrir la app (usuario de 1–50 caracteres y contraseña
+de 6–20). Las cuentas quedan en userData/accounts.json, con sal y hash scrypt;
 no se guarda la contraseña ni se comparte la cuenta con un servidor. La sesión
 se pierde al cerrar el proceso. Tema e idioma español/inglés se conservan.
 
@@ -47,7 +47,7 @@ pnpm test:packaged
 - build genera dist y dist-electron. pnpm exec electron . abre esa compilación.
 - test:smoke ejecuta Electron real con perfil temporal y sandbox activo; prueba
   registro desde la interfaz, mapa, Nariño, diagnóstico, CSV, tema/idioma y logout.
-- package recompila, verifica hashes de las seis salidas de datos y genera un
+- package recompila, verifica hashes de las siete salidas de datos y genera un
   instalador NSIS x64 en release/0.1.0/NetAgro-Colombia-0.1.0-Setup.exe.
   Incluye datos procesados en resources/data y código en app.asar.
 - test:packaged abre el ejecutable de win-unpacked con un perfil aislado y
@@ -78,15 +78,25 @@ coma. Al importarlos en una hoja de cálculo, declara los códigos DANE como
 texto para conservar los ceros iniciales. Los rankings se exportan completos;
 la tabla carga progresivamente 50 filas.
 
+## Mapa topográfico
+
+El mapa combina los polígonos administrativos del DANE con curvas hipsométricas
+de la capa rural del MGN. El pipeline conserva una curva cada 250 m y simplifica
+sus vértices para que el renderer no cargue el shapefile nacional de 866 MB.
+La geometría de curvas indica vigencia 1993 en los propios atributos; por eso la
+leyenda lo declara. Son curvas de nivel y no un modelo digital de elevación ni
+relieve sombreado. Las salidas se validan con SHA-256 y se incluyen en el paquete
+de escritorio; el renderer las solicita al abrir el mapa. No se usan teselas
+remotas ni se hacen peticiones HTTP desde el renderer.
+
 ## Diagnóstico opcional con Gemini
 
 El diagnóstico por reglas funciona sin conexión ni clave. Para una consulta
-en vivo, configura MAIN_VITE_GEMINI_API_KEY en el entorno del proceso antes de
-abrir la app y activa “Consultar Gemini en línea” al analizar. No escribas la
-clave en archivos versionados ni en variables del renderer.
+en vivo, guarda tu clave de Google AI Studio en Preferencias → Inteligencia
+artificial y activa “Consultar Gemini en línea” al analizar. Main la cifra con
+el almacén seguro del sistema operativo y no se incluye en el instalador.
 
-Main consulta Gemini REST con los modelos del prompt maestro:
-gemini-3.5-flash-lite y gemini-3.1-flash-lite. Envía métricas agregadas públicas
+Main consulta Gemini REST con el modelo gemini-3.1-flash-lite. Envía métricas agregadas públicas
 del territorio seleccionado y valida la respuesta. Sin clave, ante fallos de
 red, cuota o respuestas inválidas, usa reglas locales. No se validó una llamada
 real a Gemini en este entorno; las pruebas del adaptador usan transporte

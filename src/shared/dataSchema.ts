@@ -30,6 +30,8 @@ export const geometrySchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('Polygon'), coordinates: polygon }),
   z.object({ type: z.literal('MultiPolygon'), coordinates: z.array(polygon) }),
   z.object({ type: z.literal('Point'), coordinates: position }),
+  z.object({ type: z.literal('LineString'), coordinates: z.array(position).min(2) }),
+  z.object({ type: z.literal('MultiLineString'), coordinates: z.array(z.array(position).min(2)).min(1) }),
 ])
 export const collectionSchema = z.object({
   type: z.literal('FeatureCollection'),
@@ -39,5 +41,15 @@ export const collectionSchema = z.object({
   })),
 })
 export type MapCollection = z.infer<typeof collectionSchema>
+const reliefFeature = z.object({
+  type: z.literal('Feature'), id: z.string(),
+  geometry: z.discriminatedUnion('type', [
+    z.object({ type: z.literal('LineString'), coordinates: z.array(position).min(2) }),
+    z.object({ type: z.literal('MultiLineString'), coordinates: z.array(z.array(position).min(2)).min(1) }),
+  ]),
+  properties: z.object({ id: z.string(), elevation: z.number().finite(), major: z.boolean() }).strict(),
+})
+export const reliefSchema = z.object({ type: z.literal('FeatureCollection'), features: z.array(reliefFeature) })
+export type ReliefCollection = z.infer<typeof reliefSchema>
 export const mapsSchema = z.object({ departments: collectionSchema, municipalities: collectionSchema, centers: collectionSchema })
 export type MapData = z.infer<typeof mapsSchema>

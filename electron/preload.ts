@@ -17,6 +17,7 @@ const api: DesktopApi = Object.freeze({
   },
   getCoverage: () => invoke('data:load', undefined),
   getMaps: () => invoke('data:maps', undefined),
+  getRelief: () => invoke('data:relief', undefined),
   authStatus: () => invoke('auth:status', undefined),
   register: (input: z.infer<typeof credentialsSchema>) => invoke('auth:register', input),
   login: (input: z.infer<typeof credentialsSchema>) => invoke('auth:login', input),

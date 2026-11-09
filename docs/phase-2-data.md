@@ -22,12 +22,20 @@ declarar sin cobertura un centro con esa tecnología. La capa sin cobertura mide
 la proporción de área de centros completamente sin cobertura; no calcula la
 unión geométrica de señales ni población cubierta.
 
-Las geometrías se simplifican a tolerancia 0,002 grados para visualización; no
-deben usarse para deslindes. Los hashes SHA-256 de las fuentes, metodología y
-conteos quedan en metadata.json. manifest.json registra la integridad de todas
-las salidas; Main deberá rechazar una generación incompleta o modificada.
+Los límites administrativos se simplifican a tolerancia 0,002 grados para
+visualización; no deben usarse para deslindes. El pipeline también consume
+RURAL/CBD_RUR_HIPSO_LINEA: conserva las curvas DANE con símbolo 15, elevación
+múltiplo de 250 m y simplificación de 0,0005 grados. La fuente indica vigencia
+de atributos 1993; el mapa lo declara en su leyenda. No equivale a un DEM ni a
+una superficie de elevación sombreada. El GeoJSON resultante se carga bajo
+demanda al abrir el mapa.
+
+Los hashes SHA-256 de las fuentes, metodología y conteos quedan en metadata.json.
+manifest.json registra la integridad de todas las salidas; Main rechaza una
+generación incompleta o modificada.
 
 Salidas locales ignoradas por Git: coverage.json, departments.geojson,
-municipalities.geojson, centers.geojson, rankings.json, metadata.json y manifest.json.
+municipalities.geojson, centers.geojson, relief.geojson, rankings.json,
+metadata.json y manifest.json.
 La suite typecheck/lint/test/build pasó; 32 pruebas, incluyendo separación temporal,
 suma por niveles, tope de fracciones, ausencia de reporte y ponderación de áreas.

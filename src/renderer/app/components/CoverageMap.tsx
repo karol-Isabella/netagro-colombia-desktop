@@ -5,12 +5,14 @@ import { bbox } from '@turf/turf'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { mapView } from '@renderer/services/selectors'
 import { useTranslation } from '@renderer/i18n/useTranslation'
+import type { ReliefCollection } from '@shared/dataSchema'
 import 'maplibre-gl/dist/maplibre-gl.css'
 setWorkerUrl(workerUrl)
 
 export function CoverageMap() {
   const host = useRef<HTMLDivElement>(null), map = useRef<LibreMap | null>(null)
   const [loaded, setLoaded] = useState(false), [failed, setFailed] = useState(false)
+  const [relief, setRelief] = useState<ReliefCollection | null>(null)
   const { data, maps, selectedId, centerId, layer, heatmap, band, select, selectCenter } = useCoverageStore()
   const t = useTranslation()
   const view = useMemo(() => data && maps ? mapView(data, maps, selectedId, layer) : null, [data, maps, selectedId, layer])
@@ -29,7 +31,12 @@ export function CoverageMap() {
       instance.addSource('territories', { type: 'geojson', data: empty })
       instance.addSource('selected-department', { type: 'geojson', data: empty })
       instance.addSource('centers', { type: 'geojson', data: empty })
+      instance.addSource('relief', { type: 'geojson', data: empty })
       instance.addLayer({ id: 'coverage-fill', type: 'fill', source: 'territories', paint: { 'fill-color': ['case', ['<', ['get', 'value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get', 'value'], 0, '#f3c8a1', 0.5, '#f2df91', 0.9, '#a9d3a7', 1, '#4f9a72']], 'fill-opacity': 0.9 } })
+      instance.addLayer({ id: 'contours-minor', type: 'line', source: 'relief', filter: ['==', ['get', 'major'], false], minzoom: 3,
+        paint: { 'line-color': '#637b67', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.22, 7, 0.55, 11, 0.9], 'line-opacity': 0.26 } })
+      instance.addLayer({ id: 'contours-major', type: 'line', source: 'relief', filter: ['==', ['get', 'major'], true], minzoom: 3,
+        paint: { 'line-color': '#526f58', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.42, 7, 0.8, 11, 1.15], 'line-opacity': 0.48 } })
       instance.addLayer({ id: 'borders', type: 'line', source: 'territories', paint: { 'line-color': '#fffdf6', 'line-width': 1.4 } })
       instance.addLayer({ id: 'selected-border', type: 'line', source: 'territories', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#355f4c', 'line-width': 3, 'line-opacity': 0.95 } })
       instance.addLayer({ id: 'selected-department-border', type: 'line', source: 'selected-department', paint: { 'line-color': '#355f4c', 'line-width': 4, 'line-opacity': 0.95 } })
@@ -57,6 +64,16 @@ export function CoverageMap() {
     return () => { observer.disconnect(); instance.remove(); map.current = null }
   }, [select, selectCenter])
   useEffect(() => {
+    let active = true
+    const api = window.netAgro
+    if (loaded && api?.getRelief) {
+      void api.getRelief().then((result) => {
+        if (active && result.ok) setRelief(result.data)
+      })
+    }
+    return () => { active = false }
+  }, [loaded])
+  useEffect(() => {
     const instance = map.current
     if (!loaded || !instance || !view) return
     host.current?.setAttribute('data-rendered', 'false')
@@ -77,6 +94,11 @@ export function CoverageMap() {
       ['case', ['<', ['get','value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get','value'], 0, '#f2df91', 0.1, '#f3c8a1', 1, '#f3c8a1']] :
       ['case', ['<', ['get','value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get','value'], 0, '#f3c8a1', 0.5, '#f2df91', 0.9, '#a9d3a7', 1, '#4f9a72']])
   }, [loaded, view, heatmap, band, layer, maps, selectedId])
+  useEffect(() => {
+    if (!loaded || !map.current || !relief) return
+    ;(map.current.getSource('relief') as GeoJSONSource).setData(relief)
+    host.current?.setAttribute('data-relief-features', String(relief.features.length))
+  }, [loaded, relief])
   useEffect(() => {
     if (!loaded || !map.current || !data || !maps) return
     const features = mapView(data,maps,selectedId,'4G').polygons

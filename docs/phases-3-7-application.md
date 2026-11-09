@@ -5,8 +5,9 @@ instantánea de datos y geometrías. Los contratos IPC validan emisor, ventana,
 frame, solicitud y respuesta. Los errores expuestos son códigos controlados.
 La sesión se comprueba antes y después de operaciones asíncronas.
 
-MapLibre usa GeoJSON y un worker incluidos localmente, sin mapas base, teselas,
-fuentes ni APIs externas. Permite país > departamento > municipio, búsqueda
+MapLibre usa GeoJSON, curvas hipsométricas DANE y un worker incluidos localmente,
+sin mapas base, teselas ni recursos de mapas externos. La capa de relieve se carga
+bajo demanda. Permite país > departamento > municipio, búsqueda
 por nombre/código, filtros de leyenda, capas 2G/3G/4G/5G/sin cobertura, puntos,
 mapa de calor y atajo a Nariño. El panel muestra métricas, operadores y hasta
 20 centros sin cobertura seleccionables; la exportación contiene todos.
@@ -20,8 +21,9 @@ su signo numérico. Los códigos DANE se escriben completos; al importar en una
 hoja de cálculo deben declararse columnas de texto para conservar ceros iniciales.
 
 El diagnóstico local explica cifras reales y las limitaciones del indicador.
-Gemini REST es opcional, con consentimiento por consulta y clave solo en Main
-(`MAIN_VITE_GEMINI_API_KEY`). Usa los modelos indicados en el prompt maestro,
+Gemini REST es opcional, con consentimiento por consulta y clave solo en Main.
+El usuario la configura en Preferencias; `safeStorage` la cifra en el equipo.
+Usa el modelo `gemini-3.1-flash-lite`,
 salida estructurada validada, timeout y respaldo local ante falta de clave,
 red o cuota. Las pruebas cubren estas respuestas con transporte controlado;
 no se realizó una consulta real a Gemini porque no hay clave configurada.

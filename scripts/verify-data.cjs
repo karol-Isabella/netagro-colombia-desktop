@@ -2,7 +2,7 @@ const { readFileSync } = require('node:fs')
 const { createHash } = require('node:crypto')
 const path = require('node:path')
 const directory = path.resolve(__dirname, '../data/processed')
-const expected = ['coverage.json','departments.geojson','municipalities.geojson','centers.geojson','rankings.json','metadata.json']
+const expected = ['coverage.json','departments.geojson','municipalities.geojson','centers.geojson','relief.geojson','rankings.json','metadata.json']
 try {
   const manifest = JSON.parse(readFileSync(path.join(directory,'manifest.json'),'utf8'))
   if (manifest.schemaVersion !== 1) throw new Error('Unknown manifest version')

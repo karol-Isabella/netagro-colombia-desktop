@@ -29,4 +29,5 @@ export function registerDataIpc(getWindow: () => BrowserWindow | null, trusted: 
   const route = createRouteRegistrar(getWindow, trusted, authorize)
   route('data:load', contracts['data:load'], async () => (await repository.load()).data)
   route('data:maps', contracts['data:maps'], async () => (await repository.load()).maps)
+  route('data:relief', contracts['data:relief'], async () => repository.relief())
 }
