@@ -109,14 +109,21 @@ function AuthForm() {
 
   return (
     <main className="auth-page">
-      {/* Ambient Aurora Animated Lights */}
-      <div className="aurora-container" aria-hidden="true">
-        <div className="aurora-orb-1" />
-        <div className="aurora-orb-2" />
-        <div className="aurora-orb-3" />
-      </div>
+      <section className="auth-visual" aria-label="NetAgro">
+        <img src="/NetAgro.png" alt="" />
+        <div className="auth-visual-shade" />
+        <div className="auth-visual-content">
+          <div className="auth-visual-brand"><Sprout size={22} aria-hidden="true" /> NetAgro</div>
+          <div>
+            <span className="auth-visual-kicker">COLOMBIA · CONECTIVIDAD RURAL</span>
+            <h2>{isEs ? 'Conectamos el campo con nuevas oportunidades.' : 'Connecting the countryside to new opportunities.'}</h2>
+            <p>{isEs ? 'Datos claros para decisiones que llegan más lejos.' : 'Clear data for decisions that reach further.'}</p>
+          </div>
+          <span className="auth-visual-foot">CRC <i /> DANE <i /> NETAGRO</span>
+        </div>
+      </section>
 
-      {/* Centered Glassmorphic Card */}
+      <section className="auth-panel">
       <div className="auth-card">
         {/* Brand Icon */}
         <div className="brand-icon">
@@ -230,6 +237,7 @@ function AuthForm() {
           </button>
         </form>
       </div>
+      </section>
     </main>
   )
 }

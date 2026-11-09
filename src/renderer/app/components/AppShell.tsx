@@ -1,8 +1,7 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { LayoutDashboard, RadioTower, Map, FileText, Settings, Sprout, HardDrive, LogOut, User } from 'lucide-react'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { type MessageKey } from '@renderer/i18n/messages'
-import { PreferencesPanel } from './PreferencesPanel'
 import { TerritoryPanel } from './TerritoryPanel'
 import { useAuthStore } from '@renderer/services/authStore'
 
@@ -17,9 +16,12 @@ const navigation = [
 export function AppShell() {
   const t = useTranslation()
   const { username, logout } = useAuthStore()
+  const location = useLocation()
+  const isMapWorkspace = location.pathname === '/map' || location.pathname === '/coverage'
+  const isSettings = location.pathname === '/settings'
 
   return (
-    <div className="app-shell">
+    <div className={`${isMapWorkspace ? 'app-shell map-workspace-shell' : 'app-shell'}${isSettings ? ' settings-workspace-shell' : ''}`}>
       {/* Global Aurora Background (subtle, behind everything) */}
       <div className="dashboard-aurora" aria-hidden="true">
         <div className="dashboard-aurora-orb-1" />
@@ -96,7 +98,6 @@ export function AppShell() {
       {/* Inspector (Right Control Panel) */}
       <aside className="inspector">
         <TerritoryPanel />
-        <PreferencesPanel />
       </aside>
     </div>
   )
