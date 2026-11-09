@@ -1,4 +1,4 @@
-import { Database, RadioTower, MapPinned } from 'lucide-react'
+import { Database, RadioTower, MapPinned, Wifi } from 'lucide-react'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import type { MessageKey } from '@renderer/i18n/messages'
 
@@ -35,9 +35,16 @@ export function WorkspacePage({ section }: { section: WorkspaceSection }) {
           <div className="empty-icon">
             <RadioTower size={36} strokeWidth={1.5} aria-hidden="true" />
           </div>
+          {/* Pulse ring animation */}
+          <div className="empty-pulse-ring" aria-hidden="true" />
         </div>
         <h2 id="empty-heading">{t('awaitingData')}</h2>
         <p>{t(emptyMessages[section])}</p>
+        {/* Offline mode badge */}
+        <div className="workspace-mode-badge">
+          <Wifi size={12} aria-hidden="true" />
+          <span>Preview Mode</span>
+        </div>
       </section>
 
       {/* Official Data Sources Cards */}
