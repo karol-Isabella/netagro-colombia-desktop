@@ -58,25 +58,30 @@ function AuthForm() {
   const [touched, setTouched] = useState({ username: false, password: false })
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
-  // Localized validation error messages
   const isEs = locale === 'es'
+
+  // Validation rules:
+  // Usuario: letras y números (y caracteres permitidos). Máximo 20 caracteres (sin mínimo restrictivo tosco).
   let usernameError = ''
   if (touched.username || attemptedSubmit) {
     if (!username.trim()) {
-      usernameError = isEs ? 'El usuario es obligatorio' : 'Username is required'
-    } else if (username.length < 3) {
-      usernameError = isEs ? 'Mínimo 3 caracteres requeridos' : 'Minimum 3 characters required'
+      usernameError = isEs ? 'El nombre de usuario es obligatorio' : 'Username is required'
+    } else if (username.length > 20) {
+      usernameError = isEs ? 'Máximo 20 caracteres permitidos' : 'Maximum 20 characters allowed'
     } else if (!/^[a-zA-Z0-9._-]+$/.test(username)) {
-      usernameError = isEs ? 'Solo letras, números, puntos y guiones' : 'Only letters, numbers, dots, and hyphens'
+      usernameError = isEs ? 'Solo se permiten letras y números' : 'Only letters and numbers are allowed'
     }
   }
 
+  // Contraseña: Mínimo 6 caracteres y Máximo 20 caracteres.
   let passwordError = ''
   if (touched.password || attemptedSubmit) {
     if (!password) {
       passwordError = isEs ? 'La contraseña es obligatoria' : 'Password is required'
-    } else if (password.length < 10) {
-      passwordError = isEs ? 'Mínimo 10 caracteres requeridos' : 'Minimum 10 characters required'
+    } else if (password.length < 6) {
+      passwordError = isEs ? 'Mínimo 6 caracteres requeridos' : 'Minimum 6 characters required'
+    } else if (password.length > 20) {
+      passwordError = isEs ? 'Máximo 20 caracteres permitidos' : 'Maximum 20 characters allowed'
     }
   }
 
@@ -84,9 +89,8 @@ function AuthForm() {
     event.preventDefault()
     setAttemptedSubmit(true)
 
-    // Manual validation check before sending
-    const validUser = username.trim().length >= 3 && /^[a-zA-Z0-9._-]+$/.test(username)
-    const validPass = password.length >= 10
+    const validUser = username.trim().length >= 1 && username.length <= 20 && /^[a-zA-Z0-9._-]+$/.test(username)
+    const validPass = password.length >= 6 && password.length <= 20
 
     if (!validUser || !validPass) {
       return
@@ -105,38 +109,56 @@ function AuthForm() {
 
   return (
     <main className="auth-page">
+      {/* Ambient Aurora Animated Lights */}
+      <div className="aurora-container" aria-hidden="true">
+        <div className="aurora-orb-1" />
+        <div className="aurora-orb-2" />
+        <div className="aurora-orb-3" />
+      </div>
+
+      {/* Centered Glassmorphic Card */}
       <div className="auth-card">
-        {/* Modern App Header */}
+        {/* Brand Icon */}
         <div className="brand-icon">
           <Sprout size={28} aria-hidden="true" />
         </div>
-        <h1>{t('product')}</h1>
-        <p>{t('authDescription')}</p>
 
-        {/* Custom Form with Native Validation Disabled */}
+        {/* Clean, Elegant Header */}
+        <h1>
+          {mode === 'login'
+            ? (isEs ? 'Iniciar sesión en NetAgro' : 'Sign in to NetAgro')
+            : (isEs ? 'Crear cuenta en NetAgro' : 'Create NetAgro account')}
+        </h1>
+        <p>
+          {isEs
+            ? 'Plataforma oficial de conectividad y cobertura agropecuaria'
+            : 'Official mobile coverage and connectivity analytics'}
+        </p>
+
+        {/* Modern Form with Native Validation Disabled */}
         <form className="auth-form" noValidate onSubmit={(event) => void send(event)}>
-          <h2>{t(mode)}</h2>
-
-          {/* Username Field with Custom Error Display */}
-          <div>
-            <label htmlFor="username" className="flex items-center justify-between">
-              <span>{t('username')}</span>
-              <span className="text-[10px] text-[var(--muted)] font-normal">min. 3</span>
-            </label>
-            <div className="relative">
-              <input
-                id="username"
-                autoComplete="username"
-                required
-                minLength={3}
-                maxLength={40}
-                pattern="[a-zA-Z0-9._\-]+"
-                value={username}
-                className={usernameError ? 'input-error' : ''}
-                onBlur={() => setTouched((prev) => ({ ...prev, username: true }))}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+          {/* Campo Usuario con Etiqueta ARRIBA y Guía Sutil */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="username" className="text-xs font-semibold text-[var(--text)] m-0">
+                {isEs ? 'Nombre de usuario' : 'Username'}
+              </label>
+              <span className="text-[11px] text-[var(--muted)] font-normal">
+                {isEs ? 'Hasta 20 caracteres' : 'Up to 20 characters'}
+              </span>
             </div>
+            <input
+              id="username"
+              autoComplete="username"
+              required
+              maxLength={20}
+              pattern="[a-zA-Z0-9._\-]+"
+              placeholder={isEs ? 'Ej. usuario2026' : 'e.g. user2026'}
+              value={username}
+              className={usernameError ? 'input-error' : ''}
+              onBlur={() => setTouched((prev) => ({ ...prev, username: true }))}
+              onChange={(e) => setUsername(e.target.value)}
+            />
             {usernameError && (
               <div className="field-error-message" role="alert">
                 <AlertCircle size={13} aria-hidden="true" className="shrink-0" />
@@ -145,40 +167,38 @@ function AuthForm() {
             )}
           </div>
 
-          {/* Password Field with Custom Error Display */}
-          <div>
-            <label htmlFor="password" className="flex items-center justify-between">
-              <span>{t('password')}</span>
-              <span className="text-[10px] text-[var(--muted)] font-normal">min. 10</span>
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type="password"
-                autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
-                required
-                minLength={10}
-                maxLength={128}
-                aria-describedby="password-hint"
-                value={password}
-                className={passwordError ? 'input-error' : ''}
-                onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+          {/* Campo Contraseña con Etiqueta ARRIBA y Guía Sutil */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="password" className="text-xs font-semibold text-[var(--text)] m-0">
+                {isEs ? 'Contraseña' : 'Password'}
+              </label>
+              <span className="text-[11px] text-[var(--muted)] font-normal">
+                {isEs ? '6-20 caracteres (letras y números)' : '6-20 characters (letters & numbers)'}
+              </span>
             </div>
-            {passwordError ? (
+            <input
+              id="password"
+              type="password"
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+              required
+              minLength={6}
+              maxLength={20}
+              placeholder="••••••••"
+              value={password}
+              className={passwordError ? 'input-error' : ''}
+              onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            {passwordError && (
               <div className="field-error-message" role="alert">
                 <AlertCircle size={13} aria-hidden="true" className="shrink-0" />
                 <span>{passwordError}</span>
               </div>
-            ) : (
-              <p id="password-hint" className="small-copy">
-                {t('passwordHint')}
-              </p>
             )}
           </div>
 
-          {/* Server / Backend Error Alert Banner */}
+          {/* Banner de error devuelto por el servidor/IPC */}
           {error && (
             <div className="auth-error-banner" role="alert">
               <AlertCircle size={16} aria-hidden="true" className="shrink-0 mt-0.5" />
@@ -198,13 +218,13 @@ function AuthForm() {
             </div>
           )}
 
-          {/* Main Action Button */}
+          {/* Botón de acción principal */}
           <button className="action-button" disabled={busy} type="submit">
             <span>{t(busy ? 'loading' : mode)}</span>
             {!busy && <ArrowRight size={16} aria-hidden="true" />}
           </button>
 
-          {/* Mode Switcher */}
+          {/* Alternar modo */}
           <button type="button" className="text-link" onClick={toggleMode}>
             {t(mode === 'login' ? 'register' : 'login')}
           </button>
