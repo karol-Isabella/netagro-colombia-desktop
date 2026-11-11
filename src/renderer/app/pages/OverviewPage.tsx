@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, Radio, MapPin, Signal, ArrowRight, Layers, FileSpreadsheet } from 'lucide-react'
+import { Building2, Radio, MapPin, Signal, ArrowRight, Layers } from 'lucide-react'
 import { technologies } from '@shared/coverage'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { percent } from '@renderer/services/selectors'
@@ -30,7 +30,7 @@ export function OverviewPage() {
         <p>{t('overviewDescription')}</p>
       </header>
 
-      {/* Modern SaaS KPI Stats Grid */}
+      <div className="overview-main-grid">
       <div className="stats-grid">
         <article>
           <div className="flex items-center justify-between mb-3">
@@ -45,11 +45,11 @@ export function OverviewPage() {
         <article>
           <div className="flex items-center justify-between mb-3">
             <p>{t('uncovered')}</p>
-            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+            <div className="overview-stat-icon overview-stat-icon-warm">
               <Radio size={16} />
             </div>
           </div>
-          <strong className="text-rose-500">
+          <strong className="overview-stat-value-warm">
             {country.uncoveredCenters.toLocaleString(locale)}
           </strong>
         </article>
@@ -81,18 +81,15 @@ export function OverviewPage() {
       </div>
 
       {/* Technology Breakdown Card */}
-      <section className="settings-card">
+      <section className="settings-card overview-national">
         <div className="flex items-center gap-2 mb-2">
           <Layers size={18} className="text-[var(--accent)]" />
           <h2 className="text-base font-bold text-[var(--text)]">{t('national')}</h2>
         </div>
-        <p className="small-copy mt-0">{t('methodNote')}</p>
-
         <div className="technology-bars">
           {technologies.map((tech) => {
             const val = country.coverage[tech] ?? 0
-            const colorClass =
-              val >= 0.9 ? 'bar-high' : val >= 0.5 ? 'bar-medium' : 'bar-low'
+            const colorClass = val >= 0.9 ? 'bar-high' : val >= 0.5 ? 'bar-medium' : 'bar-low'
             return (
               <div key={tech}>
                 <span className="font-semibold text-xs text-[var(--muted)] w-10">{tech}</span>
@@ -119,9 +116,10 @@ export function OverviewPage() {
           <ArrowRight size={16} />
         </button>
       </section>
+      </div>
 
       {/* Departments Explorer */}
-      <section className="territory-list">
+      <section className="territory-list overview-territories">
         <h2 className="text-sm font-bold text-[var(--text)] uppercase tracking-wider mb-3">
           {t('hierarchy')}
         </h2>
@@ -142,18 +140,6 @@ export function OverviewPage() {
         </div>
       </section>
 
-      {/* Dataset & Methodology Info */}
-      <section className="settings-card methodology mt-8">
-        <div className="flex items-center gap-2 mb-2">
-          <FileSpreadsheet size={18} className="text-[var(--accent)]" />
-          <h2 className="text-base font-bold text-[var(--text)]">{t('dataset')}</h2>
-        </div>
-        <p className="text-sm font-medium text-[var(--text)]">
-          {t('sourceNote')} · {data.metadata.period}
-        </p>
-        <p className="small-copy">{t('methodNote')}</p>
-        <p className="small-copy">{t('pointNote')}</p>
-      </section>
     </div>
   )
 }

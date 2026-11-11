@@ -16,9 +16,9 @@ pnpm data:build
 pnpm dev
 ```
 
-El pipeline necesita los insumos locales indicados en
-[la documentación de datos](docs/phase-2-data.md). No descarga ni inventa datos.
-Si data/processed ya contiene una generación válida, basta con pnpm data:verify.
+El pipeline necesita los insumos locales del DANE en data/raw. No descarga ni
+inventa datos. Si data/processed ya contiene una generación válida, basta con
+pnpm data:verify.
 La generación actual selecciona 2025Q4: 8.161 centros, 241 sin cobertura,
 33 departamentos/distrito y 1.121 unidades municipales.
 
@@ -125,8 +125,3 @@ El árbol previo src/renderer/src se conserva como referencia fuera de la app
 activa, TypeScript y ESLint; sus cambios locales no se incluyeron en commits.
 El análisis/optimización de rutas del prototipo no está implementado en estas
 fases. No se incluyen insumos, secretos, binarios ni compilaciones en Git.
-
-Documentación: [auditoría](docs/phase-0-audit.md),
-[fundamentos](docs/phase-1-foundations.md), [pipeline](docs/phase-2-data.md),
-[aplicación](docs/phases-3-7-application.md) y
-[empaquetado y evidencia](docs/phase-8-packaging.md).

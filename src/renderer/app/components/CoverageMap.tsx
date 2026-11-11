@@ -1,13 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Map as LibreMap, NavigationControl, Popup, setWorkerUrl, type GeoJSONSource, type FilterSpecification } from 'maplibre-gl'
+import { Map as LibreMap, NavigationControl, Popup, setWorkerUrl, type GeoJSONSource, type FilterSpecification, type ExpressionSpecification } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { bbox } from '@turf/turf'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { mapView } from '@renderer/services/selectors'
 import { useTranslation } from '@renderer/i18n/useTranslation'
+import { usePreferences } from '@renderer/preferences/usePreferences'
+import type { Layer } from '@shared/coverage'
 import type { ReliefCollection } from '@shared/dataSchema'
 import 'maplibre-gl/dist/maplibre-gl.css'
 setWorkerUrl(workerUrl)
+
+function coverageFill(layer: Layer, dark: boolean): ExpressionSpecification {
+  const colors = dark
+    ? { missing: '#34494b', low: '#92714a', medium: '#827747', high: '#4e8065', best: '#62a77b' }
+    : { missing: '#d8ddd2', low: '#d8a477', medium: '#e5c766', high: '#a9d3a7', best: '#4f9a72' }
+  if (layer === 'none') return ['case', ['<', ['get', 'value'], 0], colors.missing, ['interpolate', ['linear'], ['get', 'value'], 0, colors.medium, 0.1, colors.low, 1, colors.low]] as ExpressionSpecification
+  return ['case', ['<', ['get', 'value'], 0], colors.missing, ['interpolate', ['linear'], ['get', 'value'], 0, colors.low, 0.5, colors.medium, 0.9, colors.high, 1, colors.best]] as ExpressionSpecification
+}
 
 export function CoverageMap() {
   const host = useRef<HTMLDivElement>(null), map = useRef<LibreMap | null>(null)
@@ -15,12 +25,16 @@ export function CoverageMap() {
   const [relief, setRelief] = useState<ReliefCollection | null>(null)
   const { data, maps, selectedId, centerId, layer, heatmap, band, select, selectCenter } = useCoverageStore()
   const t = useTranslation()
+  const { theme } = usePreferences()
   const view = useMemo(() => data && maps ? mapView(data, maps, selectedId, layer) : null, [data, maps, selectedId, layer])
   useEffect(() => {
     if (!host.current) return
+    setLoaded(false)
+    setFailed(false)
     let instance: LibreMap
+    const dark = document.documentElement.classList.contains('dark')
     try {
-      instance = new LibreMap({ container: host.current, style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#f3f1e7' } }] },
+      instance = new LibreMap({ container: host.current, style: { version: 8, sources: {}, layers: [{ id: 'background', type: 'background', paint: { 'background-color': getComputedStyle(document.documentElement).getPropertyValue('--canvas').trim() || '#f3f0e8' } }] },
         center: [-73.6, 4.8], zoom: 4.4, minZoom: 3, maxZoom: 17, attributionControl: false,
         transformRequest: () => { throw new Error('Remote map resources are disabled') } })
     } catch { setFailed(true); return }
@@ -32,17 +46,17 @@ export function CoverageMap() {
       instance.addSource('selected-department', { type: 'geojson', data: empty })
       instance.addSource('centers', { type: 'geojson', data: empty })
       instance.addSource('relief', { type: 'geojson', data: empty })
-      instance.addLayer({ id: 'coverage-fill', type: 'fill', source: 'territories', paint: { 'fill-color': ['case', ['<', ['get', 'value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get', 'value'], 0, '#f3c8a1', 0.5, '#f2df91', 0.9, '#a9d3a7', 1, '#4f9a72']], 'fill-opacity': 0.9 } })
+      instance.addLayer({ id: 'coverage-fill', type: 'fill', source: 'territories', paint: { 'fill-color': coverageFill('4G', dark), 'fill-opacity': 0.9 } })
       instance.addLayer({ id: 'contours-minor', type: 'line', source: 'relief', filter: ['==', ['get', 'major'], false], minzoom: 3,
-        paint: { 'line-color': '#637b67', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.22, 7, 0.55, 11, 0.9], 'line-opacity': 0.26 } })
+        paint: { 'line-color': dark ? '#82998b' : '#637b67', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.22, 7, 0.55, 11, 0.9], 'line-opacity': 0.26 } })
       instance.addLayer({ id: 'contours-major', type: 'line', source: 'relief', filter: ['==', ['get', 'major'], true], minzoom: 3,
-        paint: { 'line-color': '#526f58', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.42, 7, 0.8, 11, 1.15], 'line-opacity': 0.48 } })
-      instance.addLayer({ id: 'borders', type: 'line', source: 'territories', paint: { 'line-color': '#fffdf6', 'line-width': 1.4 } })
-      instance.addLayer({ id: 'selected-border', type: 'line', source: 'territories', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#355f4c', 'line-width': 3, 'line-opacity': 0.95 } })
-      instance.addLayer({ id: 'selected-department-border', type: 'line', source: 'selected-department', paint: { 'line-color': '#355f4c', 'line-width': 4, 'line-opacity': 0.95 } })
+        paint: { 'line-color': dark ? '#9caf9e' : '#526f58', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 0.42, 7, 0.8, 11, 1.15], 'line-opacity': 0.48 } })
+      instance.addLayer({ id: 'borders', type: 'line', source: 'territories', paint: { 'line-color': dark ? '#293c41' : '#fffdf6', 'line-width': 1.4 } })
+      instance.addLayer({ id: 'selected-border', type: 'line', source: 'territories', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': dark ? '#d8a84e' : '#355f4c', 'line-width': 3, 'line-opacity': 0.95 } })
+      instance.addLayer({ id: 'selected-department-border', type: 'line', source: 'selected-department', paint: { 'line-color': dark ? '#d8a84e' : '#355f4c', 'line-width': 4, 'line-opacity': 0.95 } })
       instance.addLayer({ id: 'heat', type: 'heatmap', source: 'centers', filter: ['==', ['get', 'none'], true], paint: { 'heatmap-radius': 28, 'heatmap-opacity': 0.65 } })
       instance.addLayer({ id: 'center-points', type: 'circle', source: 'centers', minzoom: 7,
-        paint: { 'circle-color': ['case', ['get', 'none'], '#b72d2d', '#1d6083'], 'circle-radius': 4, 'circle-stroke-width': 1, 'circle-stroke-color': '#fff' } })
+        paint: { 'circle-color': ['case', ['get', 'none'], '#d8a84e', dark ? '#75afbd' : '#1d6083'], 'circle-radius': 4, 'circle-stroke-width': 1, 'circle-stroke-color': dark ? '#182328' : '#fff' } })
       instance.on('click', 'coverage-fill', event => {
         const id = event.features?.[0]?.properties?.id as unknown
         if (typeof id === 'string') select(id)
@@ -62,7 +76,7 @@ export function CoverageMap() {
     const observer = new ResizeObserver(() => instance.resize())
     observer.observe(host.current)
     return () => { observer.disconnect(); instance.remove(); map.current = null }
-  }, [select, selectCenter])
+  }, [select, selectCenter, theme])
   useEffect(() => {
     let active = true
     const api = window.netAgro
@@ -74,10 +88,41 @@ export function CoverageMap() {
     return () => { active = false }
   }, [loaded])
   useEffect(() => {
+    if (!loaded) return
+    const updateTheme = () => {
+      const instance = map.current
+      if (!instance) return
+      const dark = document.documentElement.classList.contains('dark')
+      instance.setPaintProperty('background', 'background-color', getComputedStyle(document.documentElement).getPropertyValue('--canvas').trim() || '#f3f0e8')
+      instance.setPaintProperty('coverage-fill', 'fill-color', coverageFill(layer, dark))
+      instance.setPaintProperty('borders', 'line-color', dark ? '#293c41' : '#fffdf6')
+      instance.setPaintProperty('selected-border', 'line-color', dark ? '#d8a84e' : '#355f4c')
+      instance.setPaintProperty('selected-department-border', 'line-color', dark ? '#d8a84e' : '#355f4c')
+      instance.setPaintProperty('contours-minor', 'line-color', dark ? '#82998b' : '#637b67')
+      instance.setPaintProperty('contours-major', 'line-color', dark ? '#9caf9e' : '#526f58')
+      instance.setPaintProperty('center-points', 'circle-color', ['case', ['get', 'none'], '#d8a84e', dark ? '#75afbd' : '#1d6083'])
+      instance.setPaintProperty('center-points', 'circle-stroke-color', dark ? '#182328' : '#fff')
+    }
+    const observer = new MutationObserver(updateTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    updateTheme()
+    return () => observer.disconnect()
+  }, [loaded, layer])
+  useEffect(() => {
     const instance = map.current
     if (!loaded || !instance || !view) return
     host.current?.setAttribute('data-rendered', 'false')
     ;(instance.getSource('territories') as GeoJSONSource).setData(view.polygons)
+    const dark = document.documentElement.classList.contains('dark')
+    instance.setPaintProperty('background', 'background-color', getComputedStyle(document.documentElement).getPropertyValue('--canvas').trim() || '#f3f0e8')
+    instance.setPaintProperty('coverage-fill', 'fill-color', coverageFill(layer, dark))
+    instance.setPaintProperty('borders', 'line-color', dark ? '#293c41' : '#fffdf6')
+    instance.setPaintProperty('selected-border', 'line-color', dark ? '#d8a84e' : '#355f4c')
+    instance.setPaintProperty('selected-department-border', 'line-color', dark ? '#d8a84e' : '#355f4c')
+    instance.setPaintProperty('contours-minor', 'line-color', dark ? '#82998b' : '#637b67')
+    instance.setPaintProperty('contours-major', 'line-color', dark ? '#9caf9e' : '#526f58')
+    instance.setPaintProperty('center-points', 'circle-color', ['case', ['get', 'none'], '#d8a84e', dark ? '#75afbd' : '#1d6083'])
+    instance.setPaintProperty('center-points', 'circle-stroke-color', dark ? '#182328' : '#fff')
     const departmentBoundary = maps?.departments.features.find((feature) => feature.id === selectedId)
     ;(instance.getSource('selected-department') as GeoJSONSource).setData({
       type: 'FeatureCollection',
@@ -90,10 +135,7 @@ export function CoverageMap() {
       band === 'low' ? ['all', ['>=', ['get','value'], 0], ['<', ['get','value'], 0.5]] :
       band === 'medium' ? ['all', ['>=', ['get','value'], 0.5], ['<', ['get','value'], 0.9]] : ['>=', ['get','value'], 0.9]
     instance.setFilter('coverage-fill', filter)
-    instance.setPaintProperty('coverage-fill', 'fill-color', layer === 'none' ?
-      ['case', ['<', ['get','value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get','value'], 0, '#f2df91', 0.1, '#f3c8a1', 1, '#f3c8a1']] :
-      ['case', ['<', ['get','value'], 0], '#d8ddd2', ['interpolate', ['linear'], ['get','value'], 0, '#f3c8a1', 0.5, '#f2df91', 0.9, '#a9d3a7', 1, '#4f9a72']])
-  }, [loaded, view, heatmap, band, layer, maps, selectedId])
+  }, [loaded, view, heatmap, band, layer, maps, selectedId, theme])
   useEffect(() => {
     if (!loaded || !map.current || !relief) return
     ;(map.current.getSource('relief') as GeoJSONSource).setData(relief)

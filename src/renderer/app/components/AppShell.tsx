@@ -1,9 +1,8 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LayoutDashboard, RadioTower, Map, FileText, Settings, Sprout, HardDrive, LogOut, User } from 'lucide-react'
+import { LayoutDashboard, RadioTower, Map, FileText, Settings } from 'lucide-react'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { type MessageKey } from '@renderer/i18n/messages'
 import { TerritoryPanel } from './TerritoryPanel'
-import { useAuthStore } from '@renderer/services/authStore'
 
 const navigation = [
   { to: '/', label: 'overview', icon: LayoutDashboard },
@@ -15,7 +14,6 @@ const navigation = [
 
 export function AppShell() {
   const t = useTranslation()
-  const { username, logout } = useAuthStore()
   const location = useLocation()
   const isMapWorkspace = location.pathname === '/map' || location.pathname === '/coverage'
   const isSettings = location.pathname === '/settings'
@@ -36,9 +34,7 @@ export function AppShell() {
       {/* Floating Modern SaaS Sidebar */}
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-icon">
-            <Sprout aria-hidden="true" size={22} />
-          </div>
+          <img className="brand-icon-image" src="./netagro-mark.svg" alt="" />
           <div>
             <strong>NetAgro</strong>
             <span>Colombia</span>
@@ -62,32 +58,6 @@ export function AppShell() {
           ))}
         </nav>
 
-        {/* Workspace Storage Note */}
-        <div className="workspace-note">
-          <HardDrive size={16} aria-hidden="true" className="shrink-0 text-[var(--accent)]" />
-          <span>{t('localWorkspace')}</span>
-          <span className="sidebar-version-badge">local</span>
-        </div>
-
-        {/* User Account / Session Pill */}
-        {username && (
-          <div className="account-note">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center shrink-0">
-                <User size={13} aria-hidden="true" />
-              </div>
-              <span>{username}</span>
-            </div>
-            <button
-              type="button"
-              className="flex items-center gap-1.5"
-              onClick={() => void logout()}
-            >
-              <LogOut size={12} aria-hidden="true" />
-              <span>{t('logout')}</span>
-            </button>
-          </div>
-        )}
       </aside>
 
       {/* Main Routed Content Area */}

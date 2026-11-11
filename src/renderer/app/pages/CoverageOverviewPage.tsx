@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, Building2, MapPinned, RadioTower, Signal } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, Building2, ChevronLeft, ChevronRight, MapPinned, RadioTower, Signal } from 'lucide-react'
 import { layerValue, rankTerritories, technologies, type Layer } from '@shared/coverage'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { percent } from '@renderer/services/selectors'
@@ -13,6 +13,8 @@ export function CoverageOverviewPage() {
   const { locale } = usePreferences()
   const t = useTranslation()
   const navigate = useNavigate()
+  const [page, setPage] = useState(0)
+  const pageSize = 8
 
   useEffect(() => { void load() }, [load])
 
@@ -50,14 +52,14 @@ export function CoverageOverviewPage() {
 
       <section className="coverage-ranking-card">
         <div className="coverage-ranking-heading"><div><span className="coverage-section-kicker">{t('technology')}</span><h2>{t('coverageByDepartment')}</h2></div>
-          <label className="coverage-layer-select"><span className="sr-only">{t('technology')}</span><select value={layer} onChange={(event) => setLayer(event.target.value as Layer)}>{[...technologies, 'none'].map((item) => <option key={item} value={item}>{item === 'none' ? t('none') : item}</option>)}</select></label>
+          <label className="coverage-layer-select"><span className="sr-only">{t('technology')}</span><select value={layer} onChange={(event) => { setLayer(event.target.value as Layer); setPage(0) }}>{[...technologies, 'none'].map((item) => <option key={item} value={item}>{item === 'none' ? t('none') : item}</option>)}</select></label>
         </div>
         <p className="small-copy">{t('rankingNote')}</p>
         <div className="coverage-department-list">
-          {departments.map((department, index) => {
+          {departments.slice(page * pageSize, (page + 1) * pageSize).map((department, index) => {
             const coverage = value(department)
             return <button className="coverage-department-row" key={department.id} onClick={() => { select(department.id); navigate('/map') }}>
-              <span className="coverage-rank">{String(index + 1).padStart(2, '0')}</span>
+              <span className="coverage-rank">{String(page * pageSize + index + 1).padStart(2, '0')}</span>
               <span className="coverage-department-name">{department.name}<small>{department.centerCount.toLocaleString(locale)} {t('centers').toLowerCase()}</small></span>
               <span className="coverage-bar-track"><i style={{ width: `${coverage === null ? 0 : Math.max(0, Math.min(100, coverage * 100))}%` }} /></span>
               <strong className={coverage === null ? 'coverage-value-missing' : ''}>{percent(coverage, locale)}</strong>
@@ -65,6 +67,11 @@ export function CoverageOverviewPage() {
             </button>
           })}
         </div>
+        {departments.length > pageSize && <nav className="report-pagination coverage-pagination" aria-label={t('pagination')}>
+          <button type="button" className="pagination-button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0}><ChevronLeft size={16} aria-hidden="true" /><span>{t('previousPage')}</span></button>
+          <span className="pagination-status">{t('page')} {page + 1} {t('of')} {Math.ceil(departments.length / pageSize)}</span>
+          <button type="button" className="pagination-button" onClick={() => setPage((current) => Math.min(Math.ceil(departments.length / pageSize) - 1, current + 1))} disabled={(page + 1) * pageSize >= departments.length}><span>{t('nextPage')}</span><ChevronRight size={16} aria-hidden="true" /></button>
+        </nav>}
         <p className="small-copy">{t('methodNote')}</p>
       </section>
     </div>

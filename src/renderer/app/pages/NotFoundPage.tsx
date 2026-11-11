@@ -7,7 +7,7 @@ export function NotFoundPage() {
   return (
     <div className="page flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="empty-illustration">
-        <div className="empty-icon text-rose-500 bg-rose-500/10">
+        <div className="empty-icon text-[var(--accent)] bg-[var(--accent-soft)]">
           <Compass size={36} aria-hidden="true" />
         </div>
       </div>

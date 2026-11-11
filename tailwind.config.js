@@ -25,6 +25,8 @@ export default {
       },
       fontFamily: {
         sans: [
+          '"DM Sans"',
+          'Poppins',
           '"Segoe UI Variable"',
           'Inter',
           '"Segoe UI"',

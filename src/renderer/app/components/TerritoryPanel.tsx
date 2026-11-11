@@ -1,4 +1,4 @@
-import { MapPin, Signal, Radio, Building2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { MapPin, Signal, Radio, Building2, TrendingUp, TrendingDown, Minus, ChevronDown } from 'lucide-react'
 import { operators, layerValue } from '@shared/coverage'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { percent, territoryView } from '@renderer/services/selectors'
@@ -9,17 +9,17 @@ import { AnalysisPanel } from './AnalysisPanel'
 /** Returns semantic color class based on coverage value */
 function coverageColorClass(val: number | null | undefined): string {
   if (val === undefined || val === null || val < 0) return 'text-[var(--muted)]'
-  if (val >= 0.9) return 'text-emerald-500 dark:text-emerald-400'
-  if (val >= 0.5) return 'text-amber-500'
-  return 'text-rose-500'
+  if (val >= 0.9) return 'coverage-tone-high'
+  if (val >= 0.5) return 'coverage-tone-medium'
+  return 'coverage-tone-low'
 }
 
 /** Returns a trend icon component based on coverage value */
 function TrendIcon({ val }: { val: number | null | undefined }) {
   if (val === undefined || val === null || val < 0) return <Minus size={16} className="text-[var(--muted)]" />
-  if (val >= 0.9) return <TrendingUp size={16} className="text-emerald-500" />
-  if (val >= 0.5) return <Minus size={16} className="text-amber-500" />
-  return <TrendingDown size={16} className="text-rose-500" />
+  if (val >= 0.9) return <TrendingUp size={16} className="coverage-tone-high" />
+  if (val >= 0.5) return <Minus size={16} className="coverage-tone-medium" />
+  return <TrendingDown size={16} className="coverage-tone-low" />
 }
 
 export function TerritoryPanel() {
@@ -80,7 +80,7 @@ export function TerritoryPanel() {
             <Radio size={13} />
             <span>{t('uncovered')}</span>
           </dt>
-          <dd className="text-rose-500 font-bold">{territory.uncoveredCenters}</dd>
+          <dd className="coverage-tone-medium font-bold">{territory.uncoveredCenters}</dd>
         </div>
       </dl>
 
@@ -122,10 +122,8 @@ export function TerritoryPanel() {
       <AnalysisPanel />
 
       {/* Weak Zones List */}
-      <section className="weak-centers mt-6">
-        <h3 className="font-bold text-xs uppercase text-[var(--muted)] tracking-wider mb-2">
-          {t('weakZones')}
-        </h3>
+      <details className="weak-centers weak-centers-disclosure mt-5">
+        <summary><span>{t('weakZones')}</span><ChevronDown size={14} aria-hidden="true" /></summary>
         {centers.some((c) => c.none) ? (
           <ul>
             {centers
@@ -142,7 +140,7 @@ export function TerritoryPanel() {
         ) : (
           <p className="small-copy">{t('noWeak')}</p>
         )}
-      </section>
+      </details>
     </section>
   )
 }

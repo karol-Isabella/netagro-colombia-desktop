@@ -1,12 +1,14 @@
-import { Info } from 'lucide-react'
+import { Info, FileSpreadsheet, LogOut, UserRound } from 'lucide-react'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { PreferencesPanel } from '@renderer/components/PreferencesPanel'
 import { useAppInfo } from '@renderer/services/useAppInfo'
 import { AiSettingsPanel } from '@renderer/components/AiSettingsPanel'
+import { useAuthStore } from '@renderer/services/authStore'
 
 export function SettingsPage() {
   const t = useTranslation()
   const state = useAppInfo()
+  const { username, logout } = useAuthStore()
 
   return (
     <div className="page">
@@ -52,6 +54,23 @@ export function SettingsPage() {
             )}
           </p>
         )}
+      </section>
+
+      <section className="settings-card methodology settings-methodology">
+        <div className="flex items-center gap-2 mb-3">
+          <FileSpreadsheet size={18} className="text-[var(--accent)]" aria-hidden="true" />
+          <h2 className="text-base font-bold text-[var(--text)]">{t('dataset')}</h2>
+        </div>
+        <p className="font-medium text-[var(--text)]">{t('sourceNote')}</p>
+        <p className="small-copy">{t('methodNote')}</p>
+        <p className="small-copy">{t('pointNote')}</p>
+      </section>
+
+      <section className="settings-card session-card">
+        <div className="session-identity"><UserRound size={17} aria-hidden="true" /><span>{username}</span></div>
+        <button className="session-logout" type="button" onClick={() => void logout()}>
+          <LogOut size={15} aria-hidden="true" /><span>{t('logout')}</span>
+        </button>
       </section>
     </div>
   )

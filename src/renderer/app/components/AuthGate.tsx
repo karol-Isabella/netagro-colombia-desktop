@@ -1,12 +1,15 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Sprout, AlertCircle, ArrowRight } from 'lucide-react'
+import { Sprout, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react'
 import { useAuthStore } from '@renderer/services/authStore'
 import { useTranslation } from '@renderer/i18n/useTranslation'
 import { usePreferences } from '@renderer/preferences/usePreferences'
+import { LandingPage } from '@renderer/pages/LandingPage'
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { status, initialize } = useAuthStore()
+  const { status, initialize, hasAccounts } = useAuthStore()
   const t = useTranslation()
+  const [showAuth, setShowAuth] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('register')
 
   useEffect(() => {
     void initialize()
@@ -31,7 +34,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen grid place-items-center p-6 bg-[var(--canvas)]">
         <div className="auth-card max-w-md p-8 text-center flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center">
             <AlertCircle size={28} />
           </div>
           <p role="alert" className="text-sm font-medium text-[var(--text)]">
@@ -45,14 +48,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
     )
   }
 
-  return <AuthForm />
+  if (!showAuth) return <LandingPage hasAccounts={hasAccounts} onChoose={(mode) => { setAuthMode(mode); setShowAuth(true) }} />
+  return <AuthForm initialMode={authMode} onBack={() => setShowAuth(false)} />
 }
 
-function AuthForm() {
-  const { hasAccounts, busy, error, submit } = useAuthStore()
+function AuthForm({ initialMode, onBack }: { initialMode: 'login' | 'register'; onBack: () => void }) {
+  const { busy, error, submit } = useAuthStore()
   const { locale } = usePreferences()
   const t = useTranslation()
-  const [mode, setMode] = useState<'login' | 'register'>(hasAccounts ? 'login' : 'register')
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [touched, setTouched] = useState({ username: false, password: false })
@@ -110,10 +114,10 @@ function AuthForm() {
   return (
     <main className="auth-page">
       <section className="auth-visual" aria-label="NetAgro">
-        <img src="/NetAgro.png" alt="" />
+        <img src="./NetAgro.png" alt="" />
         <div className="auth-visual-shade" />
         <div className="auth-visual-content">
-          <div className="auth-visual-brand"><Sprout size={22} aria-hidden="true" /> NetAgro</div>
+          <div className="auth-visual-brand"><img src="./netagro-mark.svg" alt="" /> NetAgro</div>
           <div>
             <span className="auth-visual-kicker">COLOMBIA · CONECTIVIDAD RURAL</span>
             <h2>{isEs ? 'Conectamos el campo con nuevas oportunidades.' : 'Connecting the countryside to new opportunities.'}</h2>
@@ -125,6 +129,7 @@ function AuthForm() {
 
       <section className="auth-panel">
       <div className="auth-card">
+        <button type="button" className="auth-back-link" onClick={onBack}><ArrowLeft size={15} />{isEs ? 'Volver al inicio' : 'Back to home'}</button>
         {/* Brand Icon */}
         <div className="brand-icon">
           <Sprout size={28} aria-hidden="true" />

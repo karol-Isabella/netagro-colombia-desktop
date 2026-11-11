@@ -29,6 +29,7 @@ let window: BrowserWindow | null = null
 function createWindow() {
   window = new BrowserWindow({
     title: 'NetAgro Colombia',
+    icon: app.isPackaged ? path.join(process.resourcesPath, 'icon.ico') : path.join(directory, '../build/icon.ico'),
     width: 1440,
     height: 940,
     minWidth: 820,

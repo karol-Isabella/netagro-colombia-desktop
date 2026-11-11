@@ -67,6 +67,8 @@ async function verify(window) {
   assert.equal(security.sandbox, true)
   assert.equal(security.contextIsolation, true)
   assert.equal(security.nodeIntegration, false)
+  await settle(web, "document.querySelector('.landing-page') !== null")
+  await evaluate(web, "document.querySelector('.landing-login-link').click();")
   await settle(web, "document.querySelector('.auth-form') !== null")
   const denied = await evaluate(web, 'return window.netAgro.getCoverage();')
   assert.deepEqual(denied, { ok: false, error: 'AUTH_REQUIRED' })

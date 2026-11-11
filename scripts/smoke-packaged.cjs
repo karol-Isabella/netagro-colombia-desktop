@@ -77,7 +77,9 @@ async function run() {
     }
     await send('Runtime.enable')
     await send('Network.enable')
-    await wait('Boolean(window.netAgro && document.querySelector(".auth-form"))')
+    await wait('Boolean(window.netAgro && document.querySelector(".landing-page"))')
+    await evaluate('document.querySelector(".landing-login-link").click()')
+    await wait('Boolean(document.querySelector(".auth-form"))')
     console.log('Packaged auth form ready')
     assert.equal(await evaluate('typeof window.require'),'undefined')
     const denied=await evaluate('window.netAgro.getCoverage()')

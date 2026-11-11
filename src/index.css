@@ -3,24 +3,24 @@
 @tailwind utilities;
 
 :root {
-  font-family: "Segoe UI Variable", Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+  font-family: "DM Sans", Poppins, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Modern Apple / SaaS Light Palette */
   --surface: #ffffff;
-  --surface-hover: #f8fafc;
-  --canvas: #f8fafc;
-  --sidebar: #f1f5f9;
-  --text: #0f172a;
-  --muted: #64748b;
-  --line: #e2e8f0;
-  --accent: #059669;
-  --accent-hover: #047857;
-  --accent-soft: #ecfdf5;
-  --accent-glow: rgba(5, 150, 105, 0.15);
+  --surface-hover: #f8f6f0;
+  --canvas: #f3f0e8;
+  --sidebar: #193b43;
+  --text: #27343a;
+  --muted: #6c7776;
+  --line: #e6e0d4;
+  --accent: #16866b;
+  --accent-hover: #116f59;
+  --accent-soft: #e5f1e8;
+  --accent-glow: rgba(22, 134, 107, 0.16);
+  --highlight: #d8a84e;
   --glass-bg: rgba(255, 255, 255, 0.75);
   --glass-border: rgba(255, 255, 255, 0.6);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -30,18 +30,18 @@
 }
 
 :root.dark {
-  /* Modern Apple / SaaS Dark Palette */
-  --surface: #111827;
-  --surface-hover: #1e293b;
-  --canvas: #0b0f17;
-  --sidebar: #0e141e;
-  --text: #f8fafc;
-  --muted: #94a3b8;
-  --line: #1e293b;
-  --accent: #34d399;
-  --accent-hover: #10b981;
-  --accent-soft: rgba(5, 150, 105, 0.15);
-  --accent-glow: rgba(52, 211, 153, 0.2);
+  --surface: #243238;
+  --surface-hover: #2c3d42;
+  --canvas: #182328;
+  --sidebar: #193b43;
+  --text: #f3f0e8;
+  --muted: #b0bbb7;
+  --line: #3a4d51;
+  --accent: #55bd9e;
+  --accent-hover: #70cfaf;
+  --accent-soft: #294b48;
+  --accent-glow: rgba(85, 189, 158, 0.2);
+  --highlight: #d8a84e;
   --glass-bg: rgba(17, 24, 39, 0.75);
   --glass-border: rgba(255, 255, 255, 0.08);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
@@ -88,6 +88,8 @@ a {
 h1, h2, h3, p {
   margin: 0;
 }
+
+h1, .coverage-hero-card h2, .auth-card h1 { font-family: "Playfair Display", Georgia, serif; }
 
 h1, h2, h3 {
   font-weight: 600;

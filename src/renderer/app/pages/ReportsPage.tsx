@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Download, Table, Filter, ChevronDown, TrendingUp } from 'lucide-react'
+import { Download, Table, Filter, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react'
 import { technologies, layerValue, type Layer } from '@shared/coverage'
 import { useCoverageStore } from '@renderer/services/coverageStore'
 import { rankings, percent } from '@renderer/services/selectors'
@@ -20,7 +20,8 @@ export function ReportsPage() {
   const { locale } = usePreferences()
   const t = useTranslation()
   const exportTask = useExport()
-  const [limit, setLimit] = useState(50)
+  const pageSize = 10
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     void load()
@@ -67,7 +68,7 @@ export function ReportsPage() {
             value={selectedId}
             onChange={(e) => {
               select(e.target.value)
-              setLimit(50)
+              setPage(0)
             }}
           >
             {data.territories
@@ -86,7 +87,7 @@ export function ReportsPage() {
             value={layer}
             onChange={(e) => {
               setLayer(e.target.value as Layer)
-              setLimit(50)
+              setPage(0)
             }}
           >
             {[...technologies, 'none'].map((value) => (
@@ -146,7 +147,7 @@ export function ReportsPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.slice(0, limit).map((row) => (
+            {rows.slice(page * pageSize, (page + 1) * pageSize).map((row) => (
               <tr key={row.id}>
                 <td className="font-mono text-xs text-[var(--muted)]">{row.id}</td>
                 <td className="font-semibold text-[var(--text)]">{row.name}</td>
@@ -162,7 +163,7 @@ export function ReportsPage() {
                   <span
                     className={
                       row.uncoveredCenters > 0
-                        ? 'text-rose-500 font-semibold'
+                        ? 'coverage-tone-medium font-semibold'
                         : 'text-[var(--muted)]'
                     }
                   >
@@ -175,11 +176,16 @@ export function ReportsPage() {
         </table>
       </div>
 
-      {limit < rows.length && (
-        <button className="action-button mt-4" onClick={() => setLimit(limit + 50)}>
-          <span>{t('showMore')}</span>
-          <ChevronDown size={15} />
-        </button>
+      {rows.length > pageSize && (
+        <nav className="report-pagination" aria-label={t('pagination')}>
+          <button type="button" className="pagination-button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0}>
+            <ChevronLeft size={16} aria-hidden="true" /><span>{t('previousPage')}</span>
+          </button>
+          <span className="pagination-status">{t('page')} {page + 1} {t('of')} {Math.ceil(rows.length / pageSize)}</span>
+          <button type="button" className="pagination-button" onClick={() => setPage((current) => Math.min(Math.ceil(rows.length / pageSize) - 1, current + 1))} disabled={(page + 1) * pageSize >= rows.length}>
+            <span>{t('nextPage')}</span><ChevronRight size={16} aria-hidden="true" />
+          </button>
+        </nav>
       )}
 
       <p className="small-copy">{t(layer === 'none' ? 'noneNote' : 'methodNote')}</p>

@@ -83,7 +83,7 @@ export function AnalysisPanel() {
       )}
 
       {failed && (
-        <div className="flex items-center gap-2 text-xs text-rose-500 font-semibold mt-3" role="alert">
+        <div className="flex items-center gap-2 text-xs coverage-tone-medium font-semibold mt-3" role="alert">
           <AlertTriangle size={14} />
           <span>{t('dataError')}</span>
         </div>
